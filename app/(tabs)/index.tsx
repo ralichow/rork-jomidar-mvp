@@ -35,8 +35,7 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('app_name')}</Text>
-        <Text style={styles.subtitle}>{t('app_subtitle')}</Text>
+        <Text style={styles.appName}>{t('app_name')}</Text>
       </View>
       
       <View style={styles.statsContainer}>
@@ -184,15 +183,10 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  title: {
-    fontSize: 28,
+  appName: {
+    fontSize: 32,
     fontWeight: '700',
     color: colors.text.primary,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    marginTop: 4,
   },
   statsContainer: {
     flexDirection: 'row',
