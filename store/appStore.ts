@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Property, Tenant, Payment, Document, DashboardStats, Unit } from '@/types';
+import { Property, Tenant, Payment, Document, DashboardStats, Unit, DocumentSource } from '@/types';
 import { mockProperties, mockTenants, mockPayments, mockDocuments, mockDashboardStats } from '@/mocks/data';
 
 interface AppState {
@@ -40,13 +40,30 @@ interface AppState {
   recalculateStats: () => void;
 }
 
+// Convert legacy documents to new format
+const convertLegacyDocuments = (documents: any[]): Document[] => {
+  return documents.map(doc => {
+    // If the document already has a source property, return it as is
+    if (doc.source) return doc;
+    
+    // Otherwise, convert the url to a source object
+    return {
+      ...doc,
+      source: {
+        type: 'url',
+        uri: doc.url || ''
+      }
+    };
+  });
+};
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       properties: mockProperties,
       tenants: mockTenants,
       payments: mockPayments,
-      documents: mockDocuments,
+      documents: convertLegacyDocuments(mockDocuments),
       dashboardStats: mockDashboardStats,
       
       // Property actions
@@ -341,7 +358,13 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'jomidar-storage',
-      storage: createJSONStorage(() => AsyncStorage)
+      storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // Convert legacy documents to new format if needed
+        if (state && state.documents) {
+          state.documents = convertLegacyDocuments(state.documents);
+        }
+      }
     }
   )
 );

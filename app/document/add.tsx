@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, FileText, Link, User, X } from 'lucide-react-native';
+import { Calendar, Camera, FileText, Image as ImageIcon, Link, Upload, User, X } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
-import { Document } from '@/types';
+import { Document, DocumentSource } from '@/types';
 
 export default function AddDocumentScreen() {
   const router = useRouter();
@@ -13,7 +15,7 @@ export default function AddDocumentScreen() {
   
   const [name, setName] = useState('');
   const [type, setType] = useState<Document['type']>('lease');
-  const [url, setUrl] = useState('');
+  const [documentSource, setDocumentSource] = useState<DocumentSource | null>(null);
   const [relatedTo, setRelatedTo] = useState<Document['relatedTo']>('property');
   const [relatedId, setRelatedId] = useState('');
   
@@ -41,6 +43,102 @@ export default function AddDocumentScreen() {
   
   const relatedEntities = getRelatedEntities();
   
+  const pickImage = async (useCamera = false) => {
+    try {
+      let result;
+      
+      if (useCamera) {
+        // Request camera permissions
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Camera permission is required to take photos');
+          return;
+        }
+        
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+      } else {
+        // Request media library permissions
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Media library permission is required to select photos');
+          return;
+        }
+        
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+      }
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setDocumentSource({
+          type: 'image',
+          uri: asset.uri,
+          name: asset.fileName || `image_${Date.now()}.jpg`,
+          mimeType: asset.mimeType || 'image/jpeg',
+          size: asset.fileSize
+        });
+        
+        // Auto-set name if not already set
+        if (!name) {
+          setName(asset.fileName || `Document ${new Date().toLocaleDateString()}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+  
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true
+      });
+      
+      if (result.canceled === false && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setDocumentSource({
+          type: 'document',
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType,
+          size: asset.size
+        });
+        
+        // Auto-set name if not already set
+        if (!name) {
+          setName(asset.name);
+        }
+      }
+    } catch (error) {
+      console.error('Error picking document:', error);
+      Alert.alert('Error', 'Failed to pick document');
+    }
+  };
+  
+  const handleUrlInput = (url: string) => {
+    if (url) {
+      setDocumentSource({
+        type: 'url',
+        uri: url
+      });
+    } else {
+      setDocumentSource(null);
+    }
+  };
+  
+  const clearDocumentSource = () => {
+    setDocumentSource(null);
+  };
+  
   const handleSubmit = () => {
     // Validate required fields
     if (!name.trim()) {
@@ -48,8 +146,8 @@ export default function AddDocumentScreen() {
       return;
     }
     
-    if (!url.trim()) {
-      Alert.alert('Error', 'Please enter document URL');
+    if (!documentSource) {
+      Alert.alert('Error', 'Please select a document or enter a URL');
       return;
     }
     
@@ -64,7 +162,7 @@ export default function AddDocumentScreen() {
       addDocument({
         name,
         type,
-        url,
+        source: documentSource,
         uploadDate: new Date().toISOString(),
         relatedTo,
         relatedId
@@ -186,22 +284,99 @@ export default function AddDocumentScreen() {
         </View>
         
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Document URL</Text>
-          <View style={styles.inputContainer}>
-            <Link size={20} color={colors.text.tertiary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter document URL"
-              value={url}
-              onChangeText={setUrl}
-              placeholderTextColor={colors.text.tertiary}
-            />
-            {url ? (
-              <TouchableOpacity onPress={() => setUrl('')}>
+          <Text style={styles.label}>Document Source</Text>
+          
+          {!documentSource ? (
+            <View style={styles.uploadOptions}>
+              <TouchableOpacity 
+                style={styles.uploadOption} 
+                onPress={() => pickImage(false)}
+              >
+                <View style={styles.uploadIconContainer}>
+                  <ImageIcon size={24} color={colors.primary} />
+                </View>
+                <Text style={styles.uploadOptionText}>Photo Library</Text>
+              </TouchableOpacity>
+              
+              {Platform.OS !== 'web' && (
+                <TouchableOpacity 
+                  style={styles.uploadOption} 
+                  onPress={() => pickImage(true)}
+                >
+                  <View style={styles.uploadIconContainer}>
+                    <Camera size={24} color={colors.primary} />
+                  </View>
+                  <Text style={styles.uploadOptionText}>Take Photo</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity 
+                style={styles.uploadOption} 
+                onPress={pickDocument}
+              >
+                <View style={styles.uploadIconContainer}>
+                  <FileText size={24} color={colors.primary} />
+                </View>
+                <Text style={styles.uploadOptionText}>Document</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.uploadOption} 
+                onPress={() => {
+                  setDocumentSource({
+                    type: 'url',
+                    uri: ''
+                  });
+                }}
+              >
+                <View style={styles.uploadIconContainer}>
+                  <Link size={24} color={colors.primary} />
+                </View>
+                <Text style={styles.uploadOptionText}>URL</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.selectedDocumentContainer}>
+              {documentSource.type === 'image' && (
+                <Image 
+                  source={{ uri: documentSource.uri }} 
+                  style={styles.previewImage} 
+                  resizeMode="cover"
+                />
+              )}
+              
+              {documentSource.type === 'document' && (
+                <View style={styles.documentPreview}>
+                  <FileText size={32} color={colors.primary} />
+                  <Text style={styles.documentName} numberOfLines={1} ellipsizeMode="middle">
+                    {documentSource.name}
+                  </Text>
+                </View>
+              )}
+              
+              {documentSource.type === 'url' && (
+                <View style={styles.urlInputContainer}>
+                  <Link size={20} color={colors.text.tertiary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter document URL"
+                    value={documentSource.uri}
+                    onChangeText={handleUrlInput}
+                    placeholderTextColor={colors.text.tertiary}
+                    autoCapitalize="none"
+                    keyboardType="url"
+                  />
+                </View>
+              )}
+              
+              <TouchableOpacity 
+                style={styles.clearButton} 
+                onPress={clearDocumentSource}
+              >
                 <X size={18} color={colors.text.tertiary} />
               </TouchableOpacity>
-            ) : null}
-          </View>
+            </View>
+          )}
         </View>
         
         <View style={styles.inputGroup}>
@@ -389,6 +564,79 @@ const styles = StyleSheet.create({
   selectedTypeOptionText: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  uploadOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  uploadOption: {
+    alignItems: 'center',
+    width: '45%',
+    marginBottom: 12,
+  },
+  uploadIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: `${colors.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: `${colors.primary}30`,
+    borderStyle: 'dashed',
+  },
+  uploadOptionText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  selectedDocumentContainer: {
+    position: 'relative',
+    marginBottom: 8,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  documentPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  documentName: {
+    fontSize: 14,
+    color: colors.text.primary,
+    fontWeight: '500',
+    marginLeft: 12,
+    flex: 1,
+  },
+  urlInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  clearButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   relatedSelector: {
     flexDirection: 'row',

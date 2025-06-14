@@ -55,14 +55,23 @@ export type Payment = {
   remainingAmount?: number; // Amount still due
 };
 
+export type DocumentSource = {
+  type: 'url' | 'image' | 'document';
+  uri: string;
+  name?: string;
+  mimeType?: string;
+  size?: number;
+};
+
 export type Document = {
   id: string;
   name: string;
   type: 'lease' | 'receipt' | 'utility' | 'maintenance' | 'other';
-  url: string;
+  source: DocumentSource;
   uploadDate: string; // ISO date string
   relatedTo: 'property' | 'tenant' | 'unit';
   relatedId: string;
+  url?: string; // Deprecated, kept for backward compatibility
 };
 
 export type DashboardStats = {

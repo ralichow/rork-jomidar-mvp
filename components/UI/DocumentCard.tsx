@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, FileText, Link as LinkIcon } from 'lucide-react-native';
+import { Calendar, FileText, Link as LinkIcon, Image as ImageIcon } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { Document } from '@/types';
 import { useAppStore } from '@/store/appStore';
@@ -39,7 +39,19 @@ export default function DocumentCard({ document }: DocumentCardProps) {
     return 'Unknown';
   };
   
-  const getDocumentTypeIcon = () => {
+  const getDocumentIcon = () => {
+    // First check the document source type
+    if (document.source?.type === 'image') {
+      return (
+        <Image 
+          source={{ uri: document.source.uri }} 
+          style={styles.thumbnailImage} 
+          resizeMode="cover"
+        />
+      );
+    }
+    
+    // If not an image or no source, use the document type icon
     switch (document.type) {
       case 'lease':
         return <FileText size={20} color={colors.primary} />;
@@ -54,14 +66,25 @@ export default function DocumentCard({ document }: DocumentCardProps) {
     }
   };
   
+  const getSourceTypeIcon = () => {
+    if (!document.source) return null;
+    
+    switch (document.source.type) {
+      case 'image':
+        return <ImageIcon size={14} color={colors.text.tertiary} />;
+      case 'document':
+        return <FileText size={14} color={colors.text.tertiary} />;
+      case 'url':
+        return <LinkIcon size={14} color={colors.text.tertiary} />;
+      default:
+        return null;
+    }
+  };
+  
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.iconContainer}>
-        {document.type === 'lease' && <FileText size={20} color={colors.primary} />}
-        {document.type === 'receipt' && <FileText size={20} color={colors.success} />}
-        {document.type === 'utility' && <FileText size={20} color={colors.warning} />}
-        {document.type === 'maintenance' && <FileText size={20} color={colors.accent} />}
-        {document.type === 'other' && <FileText size={20} color={colors.text.secondary} />}
+        {getDocumentIcon()}
       </View>
       
       <View style={styles.content}>
@@ -76,7 +99,7 @@ export default function DocumentCard({ document }: DocumentCardProps) {
           </View>
           
           <View style={styles.infoItem}>
-            <LinkIcon size={14} color={colors.text.tertiary} />
+            {getSourceTypeIcon()}
             <Text style={styles.infoText}>
               {getRelatedEntityName()}
             </Text>
@@ -109,6 +132,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,

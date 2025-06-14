@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Platform, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Calendar, Download, Edit2, ExternalLink, FileText, Trash2, User, Link as LinkIcon } from 'lucide-react-native';
 import colors from '@/constants/colors';
@@ -71,7 +71,13 @@ export default function DocumentDetailScreen() {
   };
   
   const handleOpenDocument = () => {
-    Linking.openURL(document.url);
+    // Handle different document source types
+    if (document.source?.type === 'url') {
+      Linking.openURL(document.source.uri || document.url || '');
+    } else if (document.source?.type === 'image' || document.source?.type === 'document') {
+      // For local files, we can try to open them with the default app
+      Linking.openURL(document.source.uri);
+    }
   };
   
   const getDocumentTypeIcon = () => {
@@ -124,6 +130,16 @@ export default function DocumentDetailScreen() {
       </View>
       
       <View style={styles.content}>
+        {document.source?.type === 'image' && (
+          <View style={styles.previewContainer}>
+            <Image 
+              source={{ uri: document.source.uri }} 
+              style={styles.previewImage} 
+              resizeMode="contain"
+            />
+          </View>
+        )}
+        
         <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
             <Calendar size={18} color={colors.primary} />
@@ -145,19 +161,37 @@ export default function DocumentDetailScreen() {
             </View>
           </View>
           
-          <View style={styles.infoItem}>
-            <LinkIcon size={18} color={colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Document URL</Text>
-              <Text 
-                style={[styles.infoValue, styles.urlText]}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {document.url}
-              </Text>
+          {document.source?.type === 'url' && (
+            <View style={styles.infoItem}>
+              <LinkIcon size={18} color={colors.primary} />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Document URL</Text>
+                <Text 
+                  style={[styles.infoValue, styles.urlText]}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {document.source.uri || document.url}
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
+          
+          {document.source?.type === 'document' && (
+            <View style={styles.infoItem}>
+              <FileText size={18} color={colors.primary} />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Document Name</Text>
+                <Text 
+                  style={styles.infoValue}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {document.source.name || 'Document'}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
         
         <Button
@@ -168,7 +202,7 @@ export default function DocumentDetailScreen() {
           style={styles.openButton}
         />
         
-        {Platform.OS !== 'web' && (
+        {Platform.OS !== 'web' && document.source?.type !== 'image' && (
           <Button
             title="Download Document"
             onPress={() => {
@@ -255,6 +289,18 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  previewContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: '100%',
+    height: 300,
+    borderRadius: 8,
   },
   infoContainer: {
     backgroundColor: colors.card,
