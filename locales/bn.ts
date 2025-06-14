@@ -137,6 +137,8 @@ export const bn = {
   other: 'অন্যান্য',
   open_document: 'ডকুমেন্ট খুলুন',
   download_document: 'ডকুমেন্ট ডাউনলোড করুন',
+  choose_from_gallery: 'গ্যালারি থেকে নির্বাচন করুন',
+  take_photo: 'ছবি তুলুন',
   
   // Settings
   settings: 'সেটিংস',

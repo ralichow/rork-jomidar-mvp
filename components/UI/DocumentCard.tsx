@@ -37,6 +37,8 @@ export default function DocumentCard({ document }: DocumentCardProps) {
         return <FileText size={24} color={colors.warning} />;
       case 'maintenance':
         return <FileText size={24} color={colors.accent} />;
+      case 'other':
+        return <FileText size={24} color={colors.text.secondary} />;
       default:
         return <FileText size={24} color={colors.text.secondary} />;
     }

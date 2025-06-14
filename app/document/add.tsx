@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
-import { Camera, CameraType } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppStore } from '@/store/appStore';
@@ -11,7 +11,7 @@ import { useTheme } from '@/store/themeStore';
 import { getColors } from '@/constants/colors';
 import { Document, DocumentSource } from '@/types';
 import Button from '@/components/UI/Button';
-import { Camera as CameraIcon, Image as ImageIcon, Upload } from 'lucide-react-native';
+import { Camera as CameraIcon, Image as ImageIcon, X } from 'lucide-react-native';
 
 export default function AddDocumentScreen() {
   const router = useRouter();
@@ -26,7 +26,9 @@ export default function AddDocumentScreen() {
   const [relatedId, setRelatedId] = useState('');
   const [documentSource, setDocumentSource] = useState<DocumentSource | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [cameraPermission, requestCameraPermission] = Camera.useCameraPermissions();
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  
+  const cameraRef = useRef<any>(null);
   
   const handleAddDocument = () => {
     if (!name) {
@@ -90,51 +92,50 @@ export default function AddDocumentScreen() {
     setShowCamera(true);
   };
   
-  const handleCameraCapture = async (camera: any) => {
-    if (camera) {
-      const photo = await camera.takePictureAsync({
-        quality: 0.8,
-      });
-      
-      setDocumentSource({
-        type: 'image',
-        uri: photo.uri,
-        name: `photo_${new Date().getTime()}.jpg`,
-        mimeType: 'image/jpeg',
-      });
-      
-      setShowCamera(false);
+  const handleCameraCapture = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.8,
+        });
+        
+        setDocumentSource({
+          type: 'image',
+          uri: photo.uri,
+          name: `photo_${new Date().getTime()}.jpg`,
+          mimeType: 'image/jpeg',
+        });
+        
+        setShowCamera(false);
+      } catch (error) {
+        console.error('Error taking picture:', error);
+        Alert.alert('Error', 'Failed to take picture. Please try again.');
+      }
     }
   };
   
   if (showCamera) {
     return (
       <View style={styles.container}>
-        <Camera
+        <CameraView
           style={styles.camera}
-          type={CameraType.back}
-          ref={(ref) => {
-            if (ref) {
-              (ref as any)._camera = ref;
-            }
-          }}
+          facing={CameraType.back}
+          ref={cameraRef}
         >
           <View style={styles.cameraControls}>
             <TouchableOpacity 
               style={[styles.cameraButton, { backgroundColor: colors.card }]} 
               onPress={() => setShowCamera(false)}
             >
-              <Text style={{ color: colors.text.primary }}>Cancel</Text>
+              <X size={20} color={colors.text.primary} />
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.cameraButton, { backgroundColor: colors.primary }]} 
-              onPress={() => handleCameraCapture((Camera as any)._camera)}
-            >
-              <Text style={{ color: '#fff' }}>Capture</Text>
-            </TouchableOpacity>
+              style={[styles.captureButton, { borderColor: '#fff' }]} 
+              onPress={handleCameraCapture}
+            />
           </View>
-        </Camera>
+        </CameraView>
       </View>
     );
   }
@@ -252,7 +253,7 @@ export default function AddDocumentScreen() {
       )}
       
       <View style={styles.formGroup}>
-        <Text style={[styles.label, { color: colors.text.primary }]}>Document</Text>
+        <Text style={[styles.label, { color: colors.text.primary }]}>{t('document')}</Text>
         
         <View style={styles.documentActions}>
           <TouchableOpacity 
@@ -260,7 +261,7 @@ export default function AddDocumentScreen() {
             onPress={pickImage}
           >
             <ImageIcon size={20} color="#fff" />
-            <Text style={styles.documentButtonText}>Choose from Gallery</Text>
+            <Text style={styles.documentButtonText}>{t('choose_from_gallery')}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -268,7 +269,7 @@ export default function AddDocumentScreen() {
             onPress={takePicture}
           >
             <CameraIcon size={20} color="#fff" />
-            <Text style={styles.documentButtonText}>Take Photo</Text>
+            <Text style={styles.documentButtonText}>{t('take_photo')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -397,9 +398,17 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center',
   },
   cameraButton: {
     padding: 12,
     borderRadius: 8,
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
 });

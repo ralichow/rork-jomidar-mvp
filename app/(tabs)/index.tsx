@@ -13,12 +13,12 @@ import PaymentCard from '@/components/UI/PaymentCard';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { properties, tenants, payments, getDashboardStats } = useAppStore();
+  const { properties, tenants, payments, dashboardStats } = useAppStore();
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = getColors(isDark);
   
-  const stats = getDashboardStats();
+  const stats = dashboardStats;
   
   const recentTenants = tenants.slice(0, 3);
   const recentPayments = payments.slice(0, 3);

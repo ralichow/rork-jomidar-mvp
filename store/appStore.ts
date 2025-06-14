@@ -38,6 +38,7 @@ interface AppState {
   
   // Stats calculation
   recalculateStats: () => void;
+  getDashboardStats: () => DashboardStats;
 }
 
 // Convert legacy documents to new format
@@ -355,6 +356,11 @@ export const useAppStore = create<AppState>()(
             }
           };
         });
+      },
+      
+      // Get dashboard stats
+      getDashboardStats: () => {
+        return get().dashboardStats;
       }
     }),
     {
