@@ -47,10 +47,12 @@ export type Payment = {
   amount: number;
   date: string; // ISO date string
   type: 'rent' | 'utility' | 'maintenance' | 'deposit';
-  status: 'paid' | 'pending' | 'overdue';
+  status: 'paid' | 'pending' | 'overdue' | 'underpaid';
   month: string; // Format: "YYYY-MM"
   notes?: string;
   receiptUrl?: string;
+  expectedAmount?: number; // For tracking underpaid amounts
+  remainingAmount?: number; // Amount still due
 };
 
 export type Document = {
@@ -70,4 +72,5 @@ export type DashboardStats = {
   monthlyRevenue: number;
   pendingPayments: number;
   overduePayments: number;
+  underpaidPayments?: number;
 };

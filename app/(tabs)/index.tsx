@@ -20,9 +20,10 @@ export default function DashboardScreen() {
   
   const { t } = useTranslation();
   
-  // Calculate pending/overdue payments
+  // Calculate pending/overdue/underpaid payments
   const pendingPayments = payments.filter(p => p.status === 'pending');
   const overduePayments = payments.filter(p => p.status === 'overdue');
+  const underpaidPayments = payments.filter(p => p.status === 'underpaid');
   
   return (
     <View style={styles.container}>
@@ -74,7 +75,7 @@ export default function DashboardScreen() {
           </View>
         </View>
         
-        {(pendingPayments.length > 0 || overduePayments.length > 0) && (
+        {(pendingPayments.length > 0 || overduePayments.length > 0 || underpaidPayments.length > 0) && (
           <View style={styles.alertContainer}>
             <View style={styles.alertHeader}>
               <AlertCircle size={20} color={colors.warning} />
@@ -99,6 +100,17 @@ export default function DashboardScreen() {
               >
                 <Text style={[styles.alertText, { color: colors.danger }]}>
                   {overduePayments.length} {overduePayments.length > 1 ? t('overdue_payments_plural') : t('overdue_payments')}
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {underpaidPayments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.alertItem}
+                onPress={() => router.push('/payments')}
+              >
+                <Text style={[styles.alertText, { color: colors.accent }]}>
+                  {underpaidPayments.length} {underpaidPayments.length > 1 ? t('underpaid_payments_plural') : t('underpaid_payments')}
                 </Text>
               </TouchableOpacity>
             )}

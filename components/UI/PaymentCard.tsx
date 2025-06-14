@@ -33,6 +33,8 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
         return colors.warning;
       case 'overdue':
         return colors.danger;
+      case 'underpaid':
+        return colors.accent;
       default:
         return colors.text.secondary;
     }
@@ -85,6 +87,8 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
         return t('pending');
       case 'overdue':
         return t('overdue');
+      case 'underpaid':
+        return t('underpaid');
       default:
         return status;
     }
@@ -119,6 +123,12 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
       <View style={styles.amountContainer}>
         <Text style={styles.amountLabel}>{t('amount')}</Text>
         <Text style={styles.amount}>৳{payment.amount.toLocaleString()}</Text>
+        
+        {payment.status === 'underpaid' && payment.remainingAmount && (
+          <Text style={styles.remainingAmount}>
+            {t('remaining')}: ৳{payment.remainingAmount.toLocaleString()}
+          </Text>
+        )}
       </View>
       
       <View style={styles.infoContainer}>
@@ -196,6 +206,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: colors.text.primary,
+  },
+  remainingAmount: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.accent,
+    marginTop: 4,
   },
   infoContainer: {
     flexDirection: 'row',

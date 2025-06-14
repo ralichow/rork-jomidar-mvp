@@ -11,7 +11,7 @@ export default function PaymentsScreen() {
   const router = useRouter();
   const payments = useAppStore((state) => state.payments);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue' | 'underpaid'>('all');
   
   const filteredPayments = payments
     .filter(payment => 
@@ -125,6 +125,23 @@ export default function PaymentsScreen() {
             Overdue
           </Text>
         </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            statusFilter === 'underpaid' && styles.activeFilterButton,
+            statusFilter === 'underpaid' && { backgroundColor: `${colors.accent}20` }
+          ]}
+          onPress={() => setStatusFilter('underpaid')}
+        >
+          <Text style={[
+            styles.filterText,
+            statusFilter === 'underpaid' && styles.activeFilterText,
+            statusFilter === 'underpaid' && { color: colors.accent }
+          ]}>
+            Underpaid
+          </Text>
+        </TouchableOpacity>
       </View>
       
       {filteredPayments.length > 0 ? (
@@ -195,12 +212,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     gap: 8,
+    flexWrap: 'wrap',
   },
   filterButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     backgroundColor: colors.card,
+    marginBottom: 8,
   },
   activeFilterButton: {
     backgroundColor: `${colors.primary}20`,

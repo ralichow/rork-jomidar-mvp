@@ -14,6 +14,8 @@ export const en = {
   pending_payments_plural: 'pending payments',
   overdue_payments: 'overdue payment',
   overdue_payments_plural: 'overdue payments',
+  underpaid_payments: 'underpaid payment',
+  underpaid_payments_plural: 'underpaid payments',
   recent_tenants: 'Recent Tenants',
   recent_payments: 'Recent Payments',
   see_all: 'See All',
@@ -91,6 +93,7 @@ export const en = {
   paid: 'Paid',
   pending: 'Pending',
   overdue: 'Overdue',
+  underpaid: 'Underpaid',
   amount: 'Amount',
   payment_type: 'Payment Type',
   payment_status: 'Payment Status',
@@ -108,7 +111,11 @@ export const en = {
   deposit: 'Deposit',
   view_receipt: 'View Receipt',
   mark_as_paid: 'Mark as Paid',
+  mark_as_fully_paid: 'Mark as Fully Paid',
   send_reminder: 'Send Reminder',
+  record_remaining: 'Record Remaining',
+  remaining: 'Remaining',
+  expected_amount: 'Expected Amount',
   
   // Documents
   documents: 'Documents',

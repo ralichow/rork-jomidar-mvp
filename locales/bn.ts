@@ -14,6 +14,8 @@ export const bn = {
   pending_payments_plural: 'অপেক্ষারত পেমেন্ট',
   overdue_payments: 'বাকি পেমেন্ট',
   overdue_payments_plural: 'বাকি পেমেন্ট',
+  underpaid_payments: 'আংশিক পেমেন্ট',
+  underpaid_payments_plural: 'আংশিক পেমেন্ট',
   recent_tenants: 'সাম্প্রতিক ভাড়াটিয়া',
   recent_payments: 'সাম্প্রতিক পেমেন্ট',
   see_all: 'সব দেখুন',
@@ -91,6 +93,7 @@ export const bn = {
   paid: 'পরিশোধিত',
   pending: 'অপেক্ষারত',
   overdue: 'বাকি',
+  underpaid: 'আংশিক',
   amount: 'পরিমাণ',
   payment_type: 'পেমেন্ট ধরন',
   payment_status: 'পেমেন্ট অবস্থা',
@@ -108,7 +111,11 @@ export const bn = {
   deposit: 'জামানত',
   view_receipt: 'রসিদ দেখুন',
   mark_as_paid: 'পরিশোধিত হিসেবে চিহ্নিত করুন',
+  mark_as_fully_paid: 'সম্পূর্ণ পরিশোধিত হিসেবে চিহ্নিত করুন',
   send_reminder: 'রিমাইন্ডার পাঠান',
+  record_remaining: 'বাকি অংশ রেকর্ড করুন',
+  remaining: 'বাকি',
+  expected_amount: 'প্রত্যাশিত পরিমাণ',
   
   // Documents
   documents: 'ডকুমেন্ট',

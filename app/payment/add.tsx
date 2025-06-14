@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, CreditCard, DollarSign, FileText, User, X } from 'lucide-react-native';
+import { Calendar, CreditCard, DollarSign, FileText, User, X, AlertCircle } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
@@ -14,12 +14,14 @@ export default function AddPaymentScreen() {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
   const [type, setType] = useState<'rent' | 'utility' | 'maintenance' | 'deposit'>('rent');
-  const [status, setStatus] = useState<'paid' | 'pending' | 'overdue'>('paid');
+  const [status, setStatus] = useState<'paid' | 'pending' | 'overdue' | 'underpaid'>('paid');
   const [month, setMonth] = useState(
     `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`
   ); // Current month
   const [notes, setNotes] = useState('');
   const [receiptUrl, setReceiptUrl] = useState('');
+  const [expectedAmount, setExpectedAmount] = useState<number | null>(null);
+  const [remainingAmount, setRemainingAmount] = useState<number | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -31,6 +33,30 @@ export default function AddPaymentScreen() {
   const unit = selectedTenant && property
     ? property.units.find(u => u.id === selectedTenant.unitId)
     : null;
+  
+  // Update expected amount when tenant or payment type changes
+  useEffect(() => {
+    if (selectedTenant && type === 'rent') {
+      setExpectedAmount(selectedTenant.monthlyRent);
+      setAmount(selectedTenant.monthlyRent.toString());
+    } else {
+      setExpectedAmount(null);
+    }
+  }, [selectedTenant, type]);
+  
+  // Calculate remaining amount and update status when amount changes
+  useEffect(() => {
+    if (expectedAmount && amount) {
+      const amountValue = Number(amount);
+      if (amountValue < expectedAmount) {
+        setStatus('underpaid');
+        setRemainingAmount(expectedAmount - amountValue);
+      } else {
+        setStatus('paid');
+        setRemainingAmount(null);
+      }
+    }
+  }, [amount, expectedAmount]);
   
   const handleSubmit = () => {
     // Validate required fields
@@ -67,7 +93,9 @@ export default function AddPaymentScreen() {
         status,
         month,
         notes,
-        receiptUrl: receiptUrl || undefined
+        receiptUrl: receiptUrl || undefined,
+        expectedAmount: expectedAmount || undefined,
+        remainingAmount: remainingAmount || undefined
       });
       
       router.replace('/payments');
@@ -105,6 +133,7 @@ export default function AddPaymentScreen() {
                   // Auto-fill amount with tenant's rent if payment type is rent
                   if (type === 'rent') {
                     setAmount(tenant.monthlyRent.toString());
+                    setExpectedAmount(tenant.monthlyRent);
                   }
                 }}
               >
@@ -143,6 +172,7 @@ export default function AddPaymentScreen() {
                 // Auto-fill amount with tenant's rent if tenant is selected
                 if (selectedTenant) {
                   setAmount(selectedTenant.monthlyRent.toString());
+                  setExpectedAmount(selectedTenant.monthlyRent);
                 }
               }}
             >
@@ -159,7 +189,10 @@ export default function AddPaymentScreen() {
                 styles.typeOption,
                 type === 'utility' && styles.selectedTypeOption
               ]}
-              onPress={() => setType('utility')}
+              onPress={() => {
+                setType('utility');
+                setExpectedAmount(null);
+              }}
             >
               <Text style={[
                 styles.typeOptionText,
@@ -174,7 +207,10 @@ export default function AddPaymentScreen() {
                 styles.typeOption,
                 type === 'maintenance' && styles.selectedTypeOption
               ]}
-              onPress={() => setType('maintenance')}
+              onPress={() => {
+                setType('maintenance');
+                setExpectedAmount(null);
+              }}
             >
               <Text style={[
                 styles.typeOptionText,
@@ -194,6 +230,7 @@ export default function AddPaymentScreen() {
                 // Auto-fill amount with tenant's security deposit if tenant is selected
                 if (selectedTenant) {
                   setAmount(selectedTenant.securityDeposit.toString());
+                  setExpectedAmount(selectedTenant.securityDeposit);
                 }
               }}
             >
@@ -220,6 +257,16 @@ export default function AddPaymentScreen() {
               placeholderTextColor={colors.text.tertiary}
             />
           </View>
+          
+          {expectedAmount !== null && Number(amount) < expectedAmount && (
+            <View style={styles.warningContainer}>
+              <AlertCircle size={16} color={colors.accent} />
+              <Text style={styles.warningText}>
+                This amount is less than the expected ৳{expectedAmount.toLocaleString()}. 
+                Remaining: ৳{(expectedAmount - Number(amount)).toLocaleString()}
+              </Text>
+            </View>
+          )}
         </View>
         
         <View style={styles.inputGroup}>
@@ -231,7 +278,20 @@ export default function AddPaymentScreen() {
                 status === 'paid' && styles.selectedStatusOption,
                 status === 'paid' && { backgroundColor: `${colors.success}20` }
               ]}
-              onPress={() => setStatus('paid')}
+              onPress={() => {
+                if (expectedAmount && Number(amount) < expectedAmount) {
+                  Alert.alert(
+                    "Warning", 
+                    "The amount is less than expected. Are you sure you want to mark it as fully paid?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "Yes", onPress: () => setStatus('paid') }
+                    ]
+                  );
+                } else {
+                  setStatus('paid');
+                }
+              }}
             >
               <Text style={[
                 styles.statusOptionText,
@@ -273,6 +333,29 @@ export default function AddPaymentScreen() {
                 status === 'overdue' && { color: colors.danger }
               ]}>
                 Overdue
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.statusOption,
+                status === 'underpaid' && styles.selectedStatusOption,
+                status === 'underpaid' && { backgroundColor: `${colors.accent}20` }
+              ]}
+              onPress={() => {
+                if (expectedAmount) {
+                  setStatus('underpaid');
+                } else {
+                  Alert.alert("Error", "Underpaid status can only be used when there is an expected amount.");
+                }
+              }}
+            >
+              <Text style={[
+                styles.statusOptionText,
+                status === 'underpaid' && styles.selectedStatusOptionText,
+                status === 'underpaid' && { color: colors.accent }
+              ]}>
+                Underpaid
               </Text>
             </TouchableOpacity>
           </View>
@@ -453,17 +536,20 @@ const styles = StyleSheet.create({
   },
   statusSelector: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   statusOption: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
     flex: 1,
+    minWidth: '45%',
     alignItems: 'center',
+    marginBottom: 8,
   },
   selectedStatusOption: {
     borderColor: 'transparent',
@@ -498,6 +584,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text.tertiary,
     marginTop: 4,
+  },
+  warningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    backgroundColor: `${colors.accent}10`,
+    padding: 8,
+    borderRadius: 8,
+  },
+  warningText: {
+    fontSize: 12,
+    color: colors.accent,
+    marginLeft: 8,
+    flex: 1,
   },
   buttonContainer: {
     flexDirection: 'row',

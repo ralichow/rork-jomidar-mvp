@@ -199,6 +199,20 @@ export const mockPayments: Payment[] = [
     status: 'pending',
     month: '2023-06',
     notes: 'Payment pending'
+  },
+  {
+    id: 'p5',
+    tenantId: 't4',
+    unitId: 'u5',
+    propertyId: '2',
+    amount: 20000,
+    date: '2023-06-15',
+    type: 'rent',
+    status: 'underpaid',
+    month: '2023-06',
+    notes: 'Partial payment received',
+    expectedAmount: 28000,
+    remainingAmount: 8000
   }
 ];
 
@@ -238,5 +252,6 @@ export const mockDashboardStats: DashboardStats = {
   occupancyRate: 78.6, // (11/14) * 100
   monthlyRevenue: 270000,
   pendingPayments: 1,
-  overduePayments: 0
+  overduePayments: 0,
+  underpaidPayments: 1
 };

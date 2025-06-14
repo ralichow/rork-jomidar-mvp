@@ -323,6 +323,7 @@ export const useAppStore = create<AppState>()(
           
           const pendingPayments = state.payments.filter(p => p.status === 'pending').length;
           const overduePayments = state.payments.filter(p => p.status === 'overdue').length;
+          const underpaidPayments = state.payments.filter(p => p.status === 'underpaid').length;
           
           return {
             dashboardStats: {
@@ -331,7 +332,8 @@ export const useAppStore = create<AppState>()(
               occupancyRate,
               monthlyRevenue,
               pendingPayments,
-              overduePayments
+              overduePayments,
+              underpaidPayments
             }
           };
         });

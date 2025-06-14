@@ -9,7 +9,7 @@ import Button from '@/components/UI/Button';
 export default function PaymentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { payments, tenants, properties, deletePayment } = useAppStore();
+  const { payments, tenants, properties, deletePayment, updatePayment } = useAppStore();
   
   const payment = payments.find(p => p.id === id);
   
@@ -62,6 +62,50 @@ export default function PaymentDetailScreen() {
     }
   };
   
+  const handleMarkAsPaid = () => {
+    if (payment.status === 'underpaid' && payment.remainingAmount) {
+      Alert.alert(
+        "Mark as Fully Paid",
+        "This will mark the payment as fully paid. The remaining amount will be considered paid. Continue?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Mark as Paid", 
+            onPress: () => {
+              updatePayment({
+                ...payment,
+                status: 'paid',
+                remainingAmount: 0
+              });
+              router.replace('/payments');
+            }
+          }
+        ]
+      );
+    } else {
+      updatePayment({
+        ...payment,
+        status: 'paid'
+      });
+      router.replace('/payments');
+    }
+  };
+  
+  const handleRecordRemainingPayment = () => {
+    if (payment.status === 'underpaid' && payment.remainingAmount) {
+      router.push({
+        pathname: '/payment/add',
+        params: {
+          tenantId: payment.tenantId,
+          amount: payment.remainingAmount.toString(),
+          type: payment.type,
+          month: payment.month,
+          notes: `Remaining payment for ${payment.month}`
+        }
+      });
+    }
+  };
+  
   // Format month for display (e.g., "2023-05" to "May 2023")
   const formatMonth = (monthStr: string) => {
     const [year, month] = monthStr.split('-');
@@ -77,6 +121,8 @@ export default function PaymentDetailScreen() {
         return colors.warning;
       case 'overdue':
         return colors.danger;
+      case 'underpaid':
+        return colors.accent;
       default:
         return colors.text.secondary;
     }
@@ -90,6 +136,14 @@ export default function PaymentDetailScreen() {
             {payment.type.charAt(0).toUpperCase() + payment.type.slice(1)} Payment
           </Text>
           <Text style={styles.paymentAmount}>৳{payment.amount.toLocaleString()}</Text>
+          
+          {payment.status === 'underpaid' && payment.expectedAmount && (
+            <View style={styles.expectedAmountContainer}>
+              <Text style={styles.expectedAmountLabel}>Expected Amount:</Text>
+              <Text style={styles.expectedAmount}>৳{payment.expectedAmount.toLocaleString()}</Text>
+            </View>
+          )}
+          
           <View style={[
             styles.statusBadge,
             { backgroundColor: `${getStatusColor(payment.status)}20` }
@@ -101,6 +155,12 @@ export default function PaymentDetailScreen() {
               {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
             </Text>
           </View>
+          
+          {payment.status === 'underpaid' && payment.remainingAmount && (
+            <Text style={styles.remainingAmount}>
+              Remaining: ৳{payment.remainingAmount.toLocaleString()}
+            </Text>
+          )}
         </View>
         
         <View style={styles.headerActions}>
@@ -176,17 +236,32 @@ export default function PaymentDetailScreen() {
           />
         )}
         
-        {payment.status === 'pending' && (
+        {(payment.status === 'pending' || payment.status === 'overdue') && (
           <Button
             title="Mark as Paid"
-            onPress={() => {
-              // This would update the payment status to 'paid'
-              Alert.alert("Mark as Paid", "This would update the payment status to 'paid'");
-            }}
+            onPress={handleMarkAsPaid}
             variant="primary"
             icon={<CreditCard size={16} color={colors.card} />}
             style={styles.actionButton}
           />
+        )}
+        
+        {payment.status === 'underpaid' && (
+          <View style={styles.actionButtonsContainer}>
+            <Button
+              title="Record Remaining"
+              onPress={handleRecordRemainingPayment}
+              variant="outline"
+              style={{ flex: 1, marginRight: 8 }}
+            />
+            
+            <Button
+              title="Mark as Fully Paid"
+              onPress={handleMarkAsPaid}
+              variant="primary"
+              style={{ flex: 1 }}
+            />
+          </View>
         )}
         
         {payment.status === 'overdue' && (
@@ -203,10 +278,7 @@ export default function PaymentDetailScreen() {
             
             <Button
               title="Mark as Paid"
-              onPress={() => {
-                // This would update the payment status to 'paid'
-                Alert.alert("Mark as Paid", "This would update the payment status to 'paid'");
-              }}
+              onPress={handleMarkAsPaid}
               variant="primary"
               style={{ flex: 1 }}
             />
@@ -252,6 +324,21 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 12,
   },
+  expectedAmountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  expectedAmountLabel: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginRight: 8,
+  },
+  expectedAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
   statusBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
@@ -261,6 +348,12 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  remainingAmount: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.accent,
+    marginTop: 8,
   },
   headerActions: {
     flexDirection: 'row',
