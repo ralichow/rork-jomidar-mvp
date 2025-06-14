@@ -1,9 +1,12 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { Home, Building, Users, CreditCard, FileText } from "lucide-react-native";
+import { Home, Building, Users, CreditCard, FileText, Settings } from "lucide-react-native";
 import colors from "@/constants/colors";
+import { useTranslation } from "@/store/languageStore";
 
 export default function TabLayout() {
+  const { t } = useTranslation();
+  
   return (
     <Tabs
       screenOptions={{
@@ -26,36 +29,43 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: t('dashboard'),
           tabBarIcon: ({ color }) => <Home size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="properties"
         options={{
-          title: "Properties",
+          title: t('properties'),
           tabBarIcon: ({ color }) => <Building size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="tenants"
         options={{
-          title: "Tenants",
+          title: t('tenants'),
           tabBarIcon: ({ color }) => <Users size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="payments"
         options={{
-          title: "Payments",
+          title: t('payments'),
           tabBarIcon: ({ color }) => <CreditCard size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="documents"
         options={{
-          title: "Documents",
+          title: t('documents'),
           tabBarIcon: ({ color }) => <FileText size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t('settings'),
+          tabBarIcon: ({ color }) => <Settings size={22} color={color} />,
         }}
       />
     </Tabs>

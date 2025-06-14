@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Building2, CreditCard, HomeIcon, Plus, Users, AlertCircle } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
+import { useTranslation } from '@/store/languageStore';
 import StatCard from '@/components/UI/StatCard';
 import PropertyCard from '@/components/UI/PropertyCard';
 import TenantCard from '@/components/UI/TenantCard';
@@ -17,6 +18,8 @@ export default function DashboardScreen() {
     payments, 
     dashboardStats 
   } = useAppStore();
+  
+  const { t } = useTranslation();
   
   // Get recent data for dashboard
   const recentProperties = properties.slice(0, 2);
@@ -32,27 +35,27 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>Jomidar</Text>
-        <Text style={styles.subtitle}>Property Management</Text>
+        <Text style={styles.title}>{t('app_name')}</Text>
+        <Text style={styles.subtitle}>{t('app_subtitle')}</Text>
       </View>
       
       <View style={styles.statsContainer}>
         <StatCard
-          title="Properties"
+          title={t('properties')}
           value={dashboardStats.totalProperties}
           icon={<Building2 size={18} color={colors.primary} />}
           color={colors.primary}
         />
         
         <StatCard
-          title="Units"
+          title={t('units')}
           value={dashboardStats.totalUnits}
           icon={<HomeIcon size={18} color={colors.secondary} />}
           color={colors.secondary}
         />
         
         <StatCard
-          title="Occupancy"
+          title={t('occupancy')}
           value={Math.round(dashboardStats.occupancyRate)}
           icon={<Users size={18} color={colors.accent} />}
           color={colors.accent}
@@ -60,7 +63,7 @@ export default function DashboardScreen() {
         />
         
         <StatCard
-          title="Monthly Revenue"
+          title={t('monthly_revenue')}
           value={dashboardStats.monthlyRevenue}
           icon={<CreditCard size={18} color={colors.success} />}
           color={colors.success}
@@ -72,7 +75,7 @@ export default function DashboardScreen() {
         <View style={styles.alertContainer}>
           <View style={styles.alertHeader}>
             <AlertCircle size={20} color={colors.warning} />
-            <Text style={styles.alertTitle}>Payment Alerts</Text>
+            <Text style={styles.alertTitle}>{t('payment_alerts')}</Text>
           </View>
           
           {pendingPayments.length > 0 && (
@@ -81,7 +84,7 @@ export default function DashboardScreen() {
               onPress={() => router.push('/payments')}
             >
               <Text style={styles.alertText}>
-                {pendingPayments.length} pending payment{pendingPayments.length > 1 ? 's' : ''}
+                {pendingPayments.length} {pendingPayments.length > 1 ? t('pending_payments_plural') : t('pending_payments')}
               </Text>
             </TouchableOpacity>
           )}
@@ -92,7 +95,7 @@ export default function DashboardScreen() {
               onPress={() => router.push('/payments')}
             >
               <Text style={[styles.alertText, { color: colors.danger }]}>
-                {overduePayments.length} overdue payment{overduePayments.length > 1 ? 's' : ''}
+                {overduePayments.length} {overduePayments.length > 1 ? t('overdue_payments_plural') : t('overdue_payments')}
               </Text>
             </TouchableOpacity>
           )}
@@ -101,9 +104,9 @@ export default function DashboardScreen() {
       
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Properties</Text>
+          <Text style={styles.sectionTitle}>{t('properties')}</Text>
           <TouchableOpacity onPress={() => router.push('/properties')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -117,16 +120,16 @@ export default function DashboardScreen() {
             onPress={() => router.push('/property/add')}
           >
             <Plus size={24} color={colors.primary} />
-            <Text style={styles.emptyStateText}>Add your first property</Text>
+            <Text style={styles.emptyStateText}>{t('add_first_property')}</Text>
           </TouchableOpacity>
         )}
       </View>
       
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Tenants</Text>
+          <Text style={styles.sectionTitle}>{t('recent_tenants')}</Text>
           <TouchableOpacity onPress={() => router.push('/tenants')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -140,16 +143,16 @@ export default function DashboardScreen() {
             onPress={() => router.push('/tenant/add')}
           >
             <Plus size={24} color={colors.primary} />
-            <Text style={styles.emptyStateText}>Add your first tenant</Text>
+            <Text style={styles.emptyStateText}>{t('add_first_tenant')}</Text>
           </TouchableOpacity>
         )}
       </View>
       
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Payments</Text>
+          <Text style={styles.sectionTitle}>{t('recent_payments')}</Text>
           <TouchableOpacity onPress={() => router.push('/payments')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('see_all')}</Text>
           </TouchableOpacity>
         </View>
         
@@ -163,7 +166,7 @@ export default function DashboardScreen() {
             onPress={() => router.push('/payment/add')}
           >
             <Plus size={24} color={colors.primary} />
-            <Text style={styles.emptyStateText}>Record your first payment</Text>
+            <Text style={styles.emptyStateText}>{t('record_first_payment')}</Text>
           </TouchableOpacity>
         )}
       </View>

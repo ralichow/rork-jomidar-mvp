@@ -5,6 +5,7 @@ import { Calendar, Home, Phone } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { Tenant } from '@/types';
 import { useAppStore } from '@/store/appStore';
+import { useTranslation } from '@/store/languageStore';
 
 type TenantCardProps = {
   tenant: Tenant;
@@ -13,6 +14,7 @@ type TenantCardProps = {
 export default function TenantCard({ tenant }: TenantCardProps) {
   const router = useRouter();
   const properties = useAppStore((state) => state.properties);
+  const { t } = useTranslation();
   
   const property = properties.find(p => p.id === tenant.propertyId);
   const unit = property?.units.find(u => u.id === tenant.unitId);
@@ -27,15 +29,15 @@ export default function TenantCard({ tenant }: TenantCardProps) {
   const daysRemaining = Math.ceil((leaseEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   
   const leaseStatus = daysRemaining <= 0 
-    ? 'Expired' 
+    ? t('expired')
     : daysRemaining <= 30 
-      ? 'Expiring Soon' 
-      : 'Active';
+      ? t('expiring_soon')
+      : t('active');
   
   const leaseStatusColor = 
-    leaseStatus === 'Expired' 
+    leaseStatus === t('expired')
       ? colors.danger 
-      : leaseStatus === 'Expiring Soon' 
+      : leaseStatus === t('expiring_soon')
         ? colors.warning 
         : colors.success;
   
@@ -61,7 +63,7 @@ export default function TenantCard({ tenant }: TenantCardProps) {
         <View style={styles.infoItem}>
           <Home size={16} color={colors.primary} />
           <Text style={styles.infoText}>
-            {property?.name}, Unit {unit?.unitNumber}
+            {property?.name}, {t('unit')} {unit?.unitNumber}
           </Text>
         </View>
         
@@ -73,19 +75,19 @@ export default function TenantCard({ tenant }: TenantCardProps) {
         <View style={styles.infoItem}>
           <Calendar size={16} color={colors.primary} />
           <Text style={styles.infoText}>
-            Lease: {new Date(tenant.leaseStart).toLocaleDateString()} - {new Date(tenant.leaseEnd).toLocaleDateString()}
+            {t('lease')}: {new Date(tenant.leaseStart).toLocaleDateString()} - {new Date(tenant.leaseEnd).toLocaleDateString()}
           </Text>
         </View>
       </View>
       
       <View style={styles.footer}>
         <View style={styles.rentContainer}>
-          <Text style={styles.rentLabel}>Monthly Rent</Text>
+          <Text style={styles.rentLabel}>{t('monthly_rent')}</Text>
           <Text style={styles.rentAmount}>৳{tenant.monthlyRent.toLocaleString()}</Text>
         </View>
         
         <View style={styles.depositContainer}>
-          <Text style={styles.depositLabel}>Security Deposit</Text>
+          <Text style={styles.depositLabel}>{t('security_deposit')}</Text>
           <Text style={styles.depositAmount}>৳{tenant.securityDeposit.toLocaleString()}</Text>
         </View>
       </View>

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Building2, Home, Users } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { Property } from '@/types';
+import { useTranslation } from '@/store/languageStore';
 
 type PropertyCardProps = {
   property: Property;
@@ -11,6 +12,7 @@ type PropertyCardProps = {
 
 export default function PropertyCard({ property }: PropertyCardProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   
   const occupancyRate = property.totalUnits > 0 
     ? Math.round((property.occupiedUnits / property.totalUnits) * 100) 
@@ -29,7 +31,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           resizeMode="cover"
         />
         <View style={styles.occupancyBadge}>
-          <Text style={styles.occupancyText}>{occupancyRate}% Occupied</Text>
+          <Text style={styles.occupancyText}>{occupancyRate}% {t('occupied')}</Text>
         </View>
       </View>
       
@@ -40,17 +42,17 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Building2 size={16} color={colors.primary} />
-            <Text style={styles.statText}>{property.totalUnits} Units</Text>
+            <Text style={styles.statText}>{property.totalUnits} {t('units')}</Text>
           </View>
           
           <View style={styles.statItem}>
             <Users size={16} color={colors.primary} />
-            <Text style={styles.statText}>{property.occupiedUnits} Tenants</Text>
+            <Text style={styles.statText}>{property.occupiedUnits} {t('tenants')}</Text>
           </View>
           
           <View style={styles.statItem}>
             <Home size={16} color={colors.primary} />
-            <Text style={styles.statText}>৳{property.monthlyRevenue.toLocaleString()}/mo</Text>
+            <Text style={styles.statText}>৳{property.monthlyRevenue.toLocaleString()}{t('per_month')}</Text>
           </View>
         </View>
       </View>

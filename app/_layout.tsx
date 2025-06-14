@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import colors from "@/constants/colors";
+import { useTranslation } from "@/store/languageStore";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -39,6 +40,8 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const { t } = useTranslation();
+  
   return (
     <>
       <StatusBar style="dark" />
@@ -61,57 +64,57 @@ function RootLayoutNav() {
         <Stack.Screen 
           name="property/[id]" 
           options={{ 
-            title: "Property Details",
-            headerBackTitle: "Properties"
+            title: t('property_details'),
+            headerBackTitle: t('properties')
           }} 
         />
         <Stack.Screen 
           name="property/add" 
           options={{ 
-            title: "Add Property",
-            headerBackTitle: "Properties"
+            title: t('add_property'),
+            headerBackTitle: t('properties')
           }} 
         />
         <Stack.Screen 
           name="tenant/[id]" 
           options={{ 
-            title: "Tenant Details",
-            headerBackTitle: "Tenants"
+            title: t('tenant_details'),
+            headerBackTitle: t('tenants')
           }} 
         />
         <Stack.Screen 
           name="tenant/add" 
           options={{ 
-            title: "Add Tenant",
-            headerBackTitle: "Tenants"
+            title: t('add_tenant'),
+            headerBackTitle: t('tenants')
           }} 
         />
         <Stack.Screen 
           name="payment/[id]" 
           options={{ 
-            title: "Payment Details",
-            headerBackTitle: "Payments"
+            title: t('payment_details'),
+            headerBackTitle: t('payments')
           }} 
         />
         <Stack.Screen 
           name="payment/add" 
           options={{ 
-            title: "Record Payment",
-            headerBackTitle: "Payments"
+            title: t('record_payment'),
+            headerBackTitle: t('payments')
           }} 
         />
         <Stack.Screen 
           name="document/[id]" 
           options={{ 
-            title: "Document",
-            headerBackTitle: "Back"
+            title: t('document'),
+            headerBackTitle: t('go_back')
           }} 
         />
         <Stack.Screen 
           name="document/add" 
           options={{ 
-            title: "Add Document",
-            headerBackTitle: "Back"
+            title: t('add_document'),
+            headerBackTitle: t('go_back')
           }} 
         />
       </Stack>

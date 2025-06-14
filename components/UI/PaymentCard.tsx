@@ -5,6 +5,7 @@ import { Calendar, CreditCard, Receipt, HomeIcon } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { Payment } from '@/types';
 import { useAppStore } from '@/store/appStore';
+import { useTranslation } from '@/store/languageStore';
 
 type PaymentCardProps = {
   payment: Payment;
@@ -14,6 +15,7 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
   const router = useRouter();
   const tenants = useAppStore((state) => state.tenants);
   const properties = useAppStore((state) => state.properties);
+  const { t } = useTranslation();
   
   const tenant = tenants.find(t => t.id === payment.tenantId);
   const property = properties.find(p => p.id === payment.propertyId);
@@ -58,6 +60,36 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
   
+  // Get translated payment type
+  const getTranslatedType = (type: Payment['type']) => {
+    switch (type) {
+      case 'rent':
+        return t('rent');
+      case 'utility':
+        return t('utility');
+      case 'maintenance':
+        return t('maintenance');
+      case 'deposit':
+        return t('deposit');
+      default:
+        return type;
+    }
+  };
+  
+  // Get translated payment status
+  const getTranslatedStatus = (status: Payment['status']) => {
+    switch (status) {
+      case 'paid':
+        return t('paid');
+      case 'pending':
+        return t('pending');
+      case 'overdue':
+        return t('overdue');
+      default:
+        return status;
+    }
+  };
+  
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.header}>
@@ -67,7 +99,7 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
           {payment.type === 'maintenance' && <CreditCard size={16} color={colors.primary} />}
           {payment.type === 'deposit' && <CreditCard size={16} color={colors.primary} />}
           <Text style={styles.type}>
-            {payment.type.charAt(0).toUpperCase() + payment.type.slice(1)}
+            {getTranslatedType(payment.type)}
           </Text>
         </View>
         
@@ -79,13 +111,13 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
             styles.statusText, 
             { color: getStatusColor(payment.status) }
           ]}>
-            {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+            {getTranslatedStatus(payment.status)}
           </Text>
         </View>
       </View>
       
       <View style={styles.amountContainer}>
-        <Text style={styles.amountLabel}>Amount</Text>
+        <Text style={styles.amountLabel}>{t('amount')}</Text>
         <Text style={styles.amount}>৳{payment.amount.toLocaleString()}</Text>
       </View>
       
@@ -108,7 +140,7 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
       <View style={styles.footer}>
         <Text style={styles.tenantName}>{tenant?.name}</Text>
         <Text style={styles.propertyInfo}>
-          {property?.name}, Unit {unit?.unitNumber}
+          {property?.name}, {t('unit')} {unit?.unitNumber}
         </Text>
       </View>
     </TouchableOpacity>
