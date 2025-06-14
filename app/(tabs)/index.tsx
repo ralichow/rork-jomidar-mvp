@@ -32,11 +32,12 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         stickyHeaderIndices={[0]}
       >
-        {/* Sticky Header */}
+        {/* Sticky Header - Only this part should be sticky */}
         <View style={styles.stickyHeader}>
           <Text style={styles.appName}>{t('app_name')}</Text>
         </View>
         
+        {/* Stats Section - This should scroll normally */}
         <View style={styles.statsContainer}>
           <StatCard
             title={t('properties')}
