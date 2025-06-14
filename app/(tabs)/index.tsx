@@ -33,143 +33,151 @@ export default function DashboardScreen() {
   const overduePayments = payments.filter(p => p.status === 'overdue');
   
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      {/* Fixed Header */}
+      <View style={styles.fixedHeader}>
         <Text style={styles.appName}>{t('app_name')}</Text>
       </View>
       
-      <View style={styles.statsContainer}>
-        <StatCard
-          title={t('properties')}
-          value={dashboardStats.totalProperties}
-          icon={<Building2 size={18} color={colors.primary} />}
-          color={colors.primary}
-        />
+      {/* Scrollable Content */}
+      <ScrollView 
+        style={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.statsContainer}>
+          <StatCard
+            title={t('properties')}
+            value={dashboardStats.totalProperties}
+            icon={<Building2 size={18} color={colors.primary} />}
+            color={colors.primary}
+          />
+          
+          <StatCard
+            title={t('units')}
+            value={dashboardStats.totalUnits}
+            icon={<HomeIcon size={18} color={colors.secondary} />}
+            color={colors.secondary}
+          />
+          
+          <StatCard
+            title={t('occupancy')}
+            value={Math.round(dashboardStats.occupancyRate)}
+            icon={<Users size={18} color={colors.accent} />}
+            color={colors.accent}
+            isPercentage
+          />
+          
+          <StatCard
+            title={t('monthly_revenue')}
+            value={dashboardStats.monthlyRevenue}
+            icon={<CreditCard size={18} color={colors.success} />}
+            color={colors.success}
+            isCurrency
+          />
+        </View>
         
-        <StatCard
-          title={t('units')}
-          value={dashboardStats.totalUnits}
-          icon={<HomeIcon size={18} color={colors.secondary} />}
-          color={colors.secondary}
-        />
+        {(pendingPayments.length > 0 || overduePayments.length > 0) && (
+          <View style={styles.alertContainer}>
+            <View style={styles.alertHeader}>
+              <AlertCircle size={20} color={colors.warning} />
+              <Text style={styles.alertTitle}>{t('payment_alerts')}</Text>
+            </View>
+            
+            {pendingPayments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.alertItem}
+                onPress={() => router.push('/payments')}
+              >
+                <Text style={styles.alertText}>
+                  {pendingPayments.length} {pendingPayments.length > 1 ? t('pending_payments_plural') : t('pending_payments')}
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {overduePayments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.alertItem}
+                onPress={() => router.push('/payments')}
+              >
+                <Text style={[styles.alertText, { color: colors.danger }]}>
+                  {overduePayments.length} {overduePayments.length > 1 ? t('overdue_payments_plural') : t('overdue_payments')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
         
-        <StatCard
-          title={t('occupancy')}
-          value={Math.round(dashboardStats.occupancyRate)}
-          icon={<Users size={18} color={colors.accent} />}
-          color={colors.accent}
-          isPercentage
-        />
-        
-        <StatCard
-          title={t('monthly_revenue')}
-          value={dashboardStats.monthlyRevenue}
-          icon={<CreditCard size={18} color={colors.success} />}
-          color={colors.success}
-          isCurrency
-        />
-      </View>
-      
-      {(pendingPayments.length > 0 || overduePayments.length > 0) && (
-        <View style={styles.alertContainer}>
-          <View style={styles.alertHeader}>
-            <AlertCircle size={20} color={colors.warning} />
-            <Text style={styles.alertTitle}>{t('payment_alerts')}</Text>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('properties')}</Text>
+            <TouchableOpacity onPress={() => router.push('/properties')}>
+              <Text style={styles.seeAllText}>{t('see_all')}</Text>
+            </TouchableOpacity>
           </View>
           
-          {pendingPayments.length > 0 && (
+          {recentProperties.length > 0 ? (
+            recentProperties.map(property => (
+              <PropertyCard key={property.id} property={property} />
+            ))
+          ) : (
             <TouchableOpacity 
-              style={styles.alertItem}
-              onPress={() => router.push('/payments')}
+              style={styles.emptyState}
+              onPress={() => router.push('/property/add')}
             >
-              <Text style={styles.alertText}>
-                {pendingPayments.length} {pendingPayments.length > 1 ? t('pending_payments_plural') : t('pending_payments')}
-              </Text>
+              <Plus size={24} color={colors.primary} />
+              <Text style={styles.emptyStateText}>{t('add_first_property')}</Text>
             </TouchableOpacity>
           )}
+        </View>
+        
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('recent_tenants')}</Text>
+            <TouchableOpacity onPress={() => router.push('/tenants')}>
+              <Text style={styles.seeAllText}>{t('see_all')}</Text>
+            </TouchableOpacity>
+          </View>
           
-          {overduePayments.length > 0 && (
+          {recentTenants.length > 0 ? (
+            recentTenants.map(tenant => (
+              <TenantCard key={tenant.id} tenant={tenant} />
+            ))
+          ) : (
             <TouchableOpacity 
-              style={styles.alertItem}
-              onPress={() => router.push('/payments')}
+              style={styles.emptyState}
+              onPress={() => router.push('/tenant/add')}
             >
-              <Text style={[styles.alertText, { color: colors.danger }]}>
-                {overduePayments.length} {overduePayments.length > 1 ? t('overdue_payments_plural') : t('overdue_payments')}
-              </Text>
+              <Plus size={24} color={colors.primary} />
+              <Text style={styles.emptyStateText}>{t('add_first_tenant')}</Text>
             </TouchableOpacity>
           )}
         </View>
-      )}
-      
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('properties')}</Text>
-          <TouchableOpacity onPress={() => router.push('/properties')}>
-            <Text style={styles.seeAllText}>{t('see_all')}</Text>
-          </TouchableOpacity>
-        </View>
         
-        {recentProperties.length > 0 ? (
-          recentProperties.map(property => (
-            <PropertyCard key={property.id} property={property} />
-          ))
-        ) : (
-          <TouchableOpacity 
-            style={styles.emptyState}
-            onPress={() => router.push('/property/add')}
-          >
-            <Plus size={24} color={colors.primary} />
-            <Text style={styles.emptyStateText}>{t('add_first_property')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recent_tenants')}</Text>
-          <TouchableOpacity onPress={() => router.push('/tenants')}>
-            <Text style={styles.seeAllText}>{t('see_all')}</Text>
-          </TouchableOpacity>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('recent_payments')}</Text>
+            <TouchableOpacity onPress={() => router.push('/payments')}>
+              <Text style={styles.seeAllText}>{t('see_all')}</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {recentPayments.length > 0 ? (
+            recentPayments.map(payment => (
+              <PaymentCard key={payment.id} payment={payment} />
+            ))
+          ) : (
+            <TouchableOpacity 
+              style={styles.emptyState}
+              onPress={() => router.push('/payment/add')}
+            >
+              <Plus size={24} color={colors.primary} />
+              <Text style={styles.emptyStateText}>{t('record_first_payment')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        
-        {recentTenants.length > 0 ? (
-          recentTenants.map(tenant => (
-            <TenantCard key={tenant.id} tenant={tenant} />
-          ))
-        ) : (
-          <TouchableOpacity 
-            style={styles.emptyState}
-            onPress={() => router.push('/tenant/add')}
-          >
-            <Plus size={24} color={colors.primary} />
-            <Text style={styles.emptyStateText}>{t('add_first_tenant')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('recent_payments')}</Text>
-          <TouchableOpacity onPress={() => router.push('/payments')}>
-            <Text style={styles.seeAllText}>{t('see_all')}</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {recentPayments.length > 0 ? (
-          recentPayments.map(payment => (
-            <PaymentCard key={payment.id} payment={payment} />
-          ))
-        ) : (
-          <TouchableOpacity 
-            style={styles.emptyState}
-            onPress={() => router.push('/payment/add')}
-          >
-            <Plus size={24} color={colors.primary} />
-            <Text style={styles.emptyStateText}>{t('record_first_payment')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -178,21 +186,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  fixedHeader: {
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 10,
   },
   appName: {
     fontSize: 32,
     fontWeight: '700',
     color: colors.text.primary,
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
   statsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     padding: 16,
+    paddingTop: 0,
     gap: 12,
   },
   alertContainer: {
