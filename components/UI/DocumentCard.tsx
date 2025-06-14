@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, FileText, Link as LinkIcon, Image as ImageIcon } from 'lucide-react-native';
+import { Calendar, FileText, Image as ImageIcon } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { Document } from '@/types';
 import { useAppStore } from '@/store/appStore';
@@ -74,8 +74,6 @@ export default function DocumentCard({ document }: DocumentCardProps) {
         return <ImageIcon size={14} color={colors.text.tertiary} />;
       case 'document':
         return <FileText size={14} color={colors.text.tertiary} />;
-      case 'url':
-        return <LinkIcon size={14} color={colors.text.tertiary} />;
       default:
         return null;
     }

@@ -56,7 +56,7 @@ export type Payment = {
 };
 
 export type DocumentSource = {
-  type: 'url' | 'image' | 'document';
+  type: 'image' | 'document';
   uri: string;
   name?: string;
   mimeType?: string;

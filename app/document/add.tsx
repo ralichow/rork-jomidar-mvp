@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, Camera, FileText, Image as ImageIcon, Link, Upload, User, X } from 'lucide-react-native';
+import { Calendar, Camera, FileText, Image as ImageIcon, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import colors from '@/constants/colors';
@@ -124,17 +124,6 @@ export default function AddDocumentScreen() {
     }
   };
   
-  const handleUrlInput = (url: string) => {
-    if (url) {
-      setDocumentSource({
-        type: 'url',
-        uri: url
-      });
-    } else {
-      setDocumentSource(null);
-    }
-  };
-  
   const clearDocumentSource = () => {
     setDocumentSource(null);
   };
@@ -147,7 +136,7 @@ export default function AddDocumentScreen() {
     }
     
     if (!documentSource) {
-      Alert.alert('Error', 'Please select a document or enter a URL');
+      Alert.alert('Error', 'Please select a document or image');
       return;
     }
     
@@ -319,21 +308,6 @@ export default function AddDocumentScreen() {
                 </View>
                 <Text style={styles.uploadOptionText}>Document</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.uploadOption} 
-                onPress={() => {
-                  setDocumentSource({
-                    type: 'url',
-                    uri: ''
-                  });
-                }}
-              >
-                <View style={styles.uploadIconContainer}>
-                  <Link size={24} color={colors.primary} />
-                </View>
-                <Text style={styles.uploadOptionText}>URL</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.selectedDocumentContainer}>
@@ -351,21 +325,6 @@ export default function AddDocumentScreen() {
                   <Text style={styles.documentName} numberOfLines={1} ellipsizeMode="middle">
                     {documentSource.name}
                   </Text>
-                </View>
-              )}
-              
-              {documentSource.type === 'url' && (
-                <View style={styles.urlInputContainer}>
-                  <Link size={20} color={colors.text.tertiary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter document URL"
-                    value={documentSource.uri}
-                    onChangeText={handleUrlInput}
-                    placeholderTextColor={colors.text.tertiary}
-                    autoCapitalize="none"
-                    keyboardType="url"
-                  />
                 </View>
               )}
               
@@ -569,6 +528,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    justifyContent: 'center',
   },
   uploadOption: {
     alignItems: 'center',
@@ -617,15 +577,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 12,
     flex: 1,
-  },
-  urlInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 48,
   },
   clearButton: {
     position: 'absolute',

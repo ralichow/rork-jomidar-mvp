@@ -46,12 +46,13 @@ const convertLegacyDocuments = (documents: any[]): Document[] => {
     // If the document already has a source property, return it as is
     if (doc.source) return doc;
     
-    // Otherwise, convert the url to a source object
+    // Otherwise, convert the url to a document source object
     return {
       ...doc,
       source: {
-        type: 'url',
-        uri: doc.url || ''
+        type: 'document',
+        uri: doc.url || '',
+        name: doc.name || 'Document'
       }
     };
   });

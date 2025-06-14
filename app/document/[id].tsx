@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Platform, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Calendar, Download, Edit2, ExternalLink, FileText, Trash2, User, Link as LinkIcon } from 'lucide-react-native';
+import { Calendar, Download, Edit2, ExternalLink, FileText, Trash2, User } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
@@ -72,9 +72,7 @@ export default function DocumentDetailScreen() {
   
   const handleOpenDocument = () => {
     // Handle different document source types
-    if (document.source?.type === 'url') {
-      Linking.openURL(document.source.uri || document.url || '');
-    } else if (document.source?.type === 'image' || document.source?.type === 'document') {
+    if (document.source?.type === 'image' || document.source?.type === 'document') {
       // For local files, we can try to open them with the default app
       Linking.openURL(document.source.uri);
     }
@@ -160,22 +158,6 @@ export default function DocumentDetailScreen() {
               </Text>
             </View>
           </View>
-          
-          {document.source?.type === 'url' && (
-            <View style={styles.infoItem}>
-              <LinkIcon size={18} color={colors.primary} />
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Document URL</Text>
-                <Text 
-                  style={[styles.infoValue, styles.urlText]}
-                  numberOfLines={1}
-                  ellipsizeMode="middle"
-                >
-                  {document.source.uri || document.url}
-                </Text>
-              </View>
-            </View>
-          )}
           
           {document.source?.type === 'document' && (
             <View style={styles.infoItem}>
@@ -325,9 +307,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.primary,
     fontWeight: '500',
-  },
-  urlText: {
-    color: colors.primary,
   },
   openButton: {
     marginBottom: 12,
