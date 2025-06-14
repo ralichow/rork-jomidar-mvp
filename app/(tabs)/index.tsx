@@ -39,35 +39,39 @@ export default function DashboardScreen() {
         
         {/* Stats Section - This should scroll normally */}
         <View style={styles.statsContainer}>
-          <StatCard
-            title={t('properties')}
-            value={dashboardStats.totalProperties}
-            icon={<Building2 size={18} color={colors.primary} />}
-            color={colors.primary}
-          />
+          <View style={styles.statsRow}>
+            <StatCard
+              title={t('properties')}
+              value={dashboardStats.totalProperties}
+              icon={<Building2 size={18} color={colors.primary} />}
+              color={colors.primary}
+            />
+            
+            <StatCard
+              title={t('units')}
+              value={dashboardStats.totalUnits}
+              icon={<HomeIcon size={18} color={colors.secondary} />}
+              color={colors.secondary}
+            />
+          </View>
           
-          <StatCard
-            title={t('units')}
-            value={dashboardStats.totalUnits}
-            icon={<HomeIcon size={18} color={colors.secondary} />}
-            color={colors.secondary}
-          />
-          
-          <StatCard
-            title={t('occupancy')}
-            value={Math.round(dashboardStats.occupancyRate)}
-            icon={<Users size={18} color={colors.accent} />}
-            color={colors.accent}
-            isPercentage
-          />
-          
-          <StatCard
-            title={t('monthly_revenue')}
-            value={dashboardStats.monthlyRevenue}
-            icon={<CreditCard size={18} color={colors.success} />}
-            color={colors.success}
-            isCurrency
-          />
+          <View style={styles.statsRow}>
+            <StatCard
+              title={t('occupancy')}
+              value={Math.round(dashboardStats.occupancyRate)}
+              icon={<Users size={18} color={colors.accent} />}
+              color={colors.accent}
+              isPercentage
+            />
+            
+            <StatCard
+              title={t('monthly_revenue')}
+              value={dashboardStats.monthlyRevenue}
+              icon={<CreditCard size={18} color={colors.success} />}
+              color={colors.success}
+              isCurrency
+            />
+          </View>
         </View>
         
         {(pendingPayments.length > 0 || overduePayments.length > 0) && (
@@ -212,11 +216,12 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     padding: 16,
-    gap: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   alertContainer: {
     margin: 16,
