@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, Home, Phone } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { Tenant } from '@/types';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 
 type TenantCardProps = {
   tenant: Tenant;
@@ -15,6 +16,8 @@ export default function TenantCard({ tenant }: TenantCardProps) {
   const router = useRouter();
   const properties = useAppStore((state) => state.properties);
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   
   const property = properties.find(p => p.id === tenant.propertyId);
   const unit = property?.units.find(u => u.id === tenant.unitId);
@@ -42,14 +45,20 @@ export default function TenantCard({ tenant }: TenantCardProps) {
         : colors.success;
   
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress}>
+    <TouchableOpacity 
+      style={[styles.container, { 
+        backgroundColor: colors.card,
+        shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#000',
+      }]} 
+      onPress={handlePress}
+    >
       <View style={styles.header}>
         <Image 
           source={{ uri: tenant.photo || 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80' }} 
           style={styles.avatar} 
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.name}>{tenant.name}</Text>
+          <Text style={[styles.name, { color: colors.text.primary }]}>{tenant.name}</Text>
           <View style={styles.leaseStatusContainer}>
             <View style={[styles.statusDot, { backgroundColor: leaseStatusColor }]} />
             <Text style={[styles.leaseStatus, { color: leaseStatusColor }]}>
@@ -62,33 +71,33 @@ export default function TenantCard({ tenant }: TenantCardProps) {
       <View style={styles.infoContainer}>
         <View style={styles.infoItem}>
           <Home size={16} color={colors.primary} />
-          <Text style={styles.infoText}>
+          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
             {property?.name}, {t('unit')} {unit?.unitNumber}
           </Text>
         </View>
         
         <View style={styles.infoItem}>
           <Phone size={16} color={colors.primary} />
-          <Text style={styles.infoText}>{tenant.phone}</Text>
+          <Text style={[styles.infoText, { color: colors.text.secondary }]}>{tenant.phone}</Text>
         </View>
         
         <View style={styles.infoItem}>
           <Calendar size={16} color={colors.primary} />
-          <Text style={styles.infoText}>
+          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
             {t('lease')}: {new Date(tenant.leaseStart).toLocaleDateString()} - {new Date(tenant.leaseEnd).toLocaleDateString()}
           </Text>
         </View>
       </View>
       
-      <View style={styles.footer}>
-        <View style={styles.rentContainer}>
-          <Text style={styles.rentLabel}>{t('monthly_rent')}</Text>
-          <Text style={styles.rentAmount}>৳{tenant.monthlyRent.toLocaleString()}</Text>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <View style={[styles.rentContainer, { borderRightColor: colors.border }]}>
+          <Text style={[styles.rentLabel, { color: colors.text.tertiary }]}>{t('monthly_rent')}</Text>
+          <Text style={[styles.rentAmount, { color: colors.text.primary }]}>৳{tenant.monthlyRent.toLocaleString()}</Text>
         </View>
         
         <View style={styles.depositContainer}>
-          <Text style={styles.depositLabel}>{t('security_deposit')}</Text>
-          <Text style={styles.depositAmount}>৳{tenant.securityDeposit.toLocaleString()}</Text>
+          <Text style={[styles.depositLabel, { color: colors.text.tertiary }]}>{t('security_deposit')}</Text>
+          <Text style={[styles.depositAmount, { color: colors.text.primary }]}>৳{tenant.securityDeposit.toLocaleString()}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -97,11 +106,9 @@ export default function TenantCard({ tenant }: TenantCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -124,7 +131,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text.primary,
     marginBottom: 4,
   },
   leaseStatusContainer: {
@@ -151,19 +157,16 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: colors.text.secondary,
     marginLeft: 8,
   },
   footer: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     paddingTop: 12,
   },
   rentContainer: {
     flex: 1,
     borderRightWidth: 1,
-    borderRightColor: colors.border,
     paddingRight: 12,
   },
   depositContainer: {
@@ -172,22 +175,18 @@ const styles = StyleSheet.create({
   },
   rentLabel: {
     fontSize: 12,
-    color: colors.text.tertiary,
     marginBottom: 4,
   },
   rentAmount: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text.primary,
   },
   depositLabel: {
     fontSize: 12,
-    color: colors.text.tertiary,
     marginBottom: 4,
   },
   depositAmount: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.text.primary,
   },
 });

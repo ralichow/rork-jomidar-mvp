@@ -1,11 +1,14 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { Home, Building, Users, CreditCard, FileText, Settings } from "lucide-react-native";
-import colors from "@/constants/colors";
 import { useTranslation } from "@/store/languageStore";
+import { useTheme } from "@/store/themeStore";
+import { getColors } from "@/constants/colors";
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   
   return (
     <Tabs

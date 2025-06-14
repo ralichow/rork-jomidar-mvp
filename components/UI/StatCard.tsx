@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 
 type StatCardProps = {
   title: string;
@@ -20,10 +21,16 @@ export default function StatCard({
   icon,
   trend,
   trendLabel,
-  color = colors.primary,
+  color,
   isCurrency = false,
   isPercentage = false
 }: StatCardProps) {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  
+  // Use the provided color or default to primary
+  const cardColor = color || colors.primary;
+  
   const formattedValue = isCurrency 
     ? `৳${typeof value === 'number' ? value.toLocaleString() : value}`
     : isPercentage
@@ -34,15 +41,15 @@ export default function StatCard({
   const trendColor = isTrendPositive ? colors.success : colors.danger;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
+        <Text style={[styles.title, { color: colors.text.secondary }]}>{title}</Text>
+        <View style={[styles.iconContainer, { backgroundColor: `${cardColor}20` }]}>
           {icon}
         </View>
       </View>
       
-      <Text style={styles.value}>{formattedValue}</Text>
+      <Text style={[styles.value, { color: colors.text.primary }]}>{formattedValue}</Text>
       
       {trend !== undefined && (
         <View style={styles.trendContainer}>
@@ -54,7 +61,7 @@ export default function StatCard({
           <Text style={[styles.trendValue, { color: trendColor }]}>
             {Math.abs(trend)}%
           </Text>
-          {trendLabel && <Text style={styles.trendLabel}>{trendLabel}</Text>}
+          {trendLabel && <Text style={[styles.trendLabel, { color: colors.text.tertiary }]}>{trendLabel}</Text>}
         </View>
       )}
     </View>
@@ -63,7 +70,6 @@ export default function StatCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
@@ -71,7 +77,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
-    width: '48%',
+    flex: 1, // Use flex instead of fixed width to ensure proper layout
   },
   header: {
     flexDirection: 'row',
@@ -81,7 +87,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    color: colors.text.secondary,
     fontWeight: '500',
   },
   iconContainer: {
@@ -94,7 +99,6 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.text.primary,
     marginBottom: 8,
   },
   trendContainer: {
@@ -108,7 +112,6 @@ const styles = StyleSheet.create({
   },
   trendLabel: {
     fontSize: 14,
-    color: colors.text.tertiary,
     marginLeft: 4,
   }
 });

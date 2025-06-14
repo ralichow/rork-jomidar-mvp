@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, FileText, Image as ImageIcon } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import { Calendar, FileText, Home, User } from 'lucide-react-native';
 import { Document } from '@/types';
 import { useAppStore } from '@/store/appStore';
+import { useTranslation } from '@/store/languageStore';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 
 type DocumentCardProps = {
   document: Document;
@@ -12,97 +14,78 @@ type DocumentCardProps = {
 
 export default function DocumentCard({ document }: DocumentCardProps) {
   const router = useRouter();
-  const properties = useAppStore((state) => state.properties);
-  const tenants = useAppStore((state) => state.tenants);
+  const { properties, tenants } = useAppStore();
+  const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  
+  const tenant = document.tenantId ? tenants.find(t => t.id === document.tenantId) : null;
+  const property = document.propertyId ? properties.find(p => p.id === document.propertyId) : null;
   
   const handlePress = () => {
     router.push(`/document/${document.id}`);
   };
   
-  const getRelatedEntityName = () => {
-    if (document.relatedTo === 'property') {
-      const property = properties.find(p => p.id === document.relatedId);
-      return property?.name || 'Unknown Property';
-    } else if (document.relatedTo === 'tenant') {
-      const tenant = tenants.find(t => t.id === document.relatedId);
-      return tenant?.name || 'Unknown Tenant';
-    } else if (document.relatedTo === 'unit') {
-      let unitInfo = 'Unknown Unit';
-      properties.forEach(property => {
-        const unit = property.units.find(u => u.id === document.relatedId);
-        if (unit) {
-          unitInfo = `${property.name}, Unit ${unit.unitNumber}`;
-        }
-      });
-      return unitInfo;
-    }
-    return 'Unknown';
-  };
-  
-  const getDocumentIcon = () => {
-    // First check the document source type
-    if (document.source?.type === 'image') {
-      return (
-        <Image 
-          source={{ uri: document.source.uri }} 
-          style={styles.thumbnailImage} 
-          resizeMode="cover"
-        />
-      );
-    }
-    
-    // If not an image or no source, use the document type icon
+  const getDocumentTypeIcon = () => {
     switch (document.type) {
       case 'lease':
-        return <FileText size={20} color={colors.primary} />;
+        return <FileText size={24} color={colors.primary} />;
       case 'receipt':
-        return <FileText size={20} color={colors.success} />;
-      case 'utility':
-        return <FileText size={20} color={colors.warning} />;
+        return <FileText size={24} color={colors.success} />;
+      case 'notice':
+        return <FileText size={24} color={colors.warning} />;
       case 'maintenance':
-        return <FileText size={20} color={colors.accent} />;
+        return <FileText size={24} color={colors.accent} />;
       default:
-        return <FileText size={20} color={colors.text.secondary} />;
-    }
-  };
-  
-  const getSourceTypeIcon = () => {
-    if (!document.source) return null;
-    
-    switch (document.source.type) {
-      case 'image':
-        return <ImageIcon size={14} color={colors.text.tertiary} />;
-      case 'document':
-        return <FileText size={14} color={colors.text.tertiary} />;
-      default:
-        return null;
+        return <FileText size={24} color={colors.text.secondary} />;
     }
   };
   
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <View style={styles.iconContainer}>
-        {getDocumentIcon()}
+    <TouchableOpacity 
+      style={[styles.container, { 
+        backgroundColor: colors.card,
+        shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#000',
+      }]} 
+      onPress={handlePress}
+    >
+      <View style={styles.header}>
+        <View style={[styles.iconContainer, { backgroundColor: `${colors.primary}15` }]}>
+          {getDocumentTypeIcon()}
+        </View>
+        <View style={styles.headerInfo}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>{document.title}</Text>
+          <Text style={[styles.type, { color: colors.text.secondary }]}>
+            {document.type.charAt(0).toUpperCase() + document.type.slice(1)}
+          </Text>
+        </View>
       </View>
       
-      <View style={styles.content}>
-        <Text style={styles.name}>{document.name}</Text>
-        
-        <View style={styles.infoContainer}>
-          <View style={styles.infoItem}>
-            <Calendar size={14} color={colors.text.tertiary} />
-            <Text style={styles.infoText}>
-              {new Date(document.uploadDate).toLocaleDateString()}
-            </Text>
-          </View>
-          
-          <View style={styles.infoItem}>
-            {getSourceTypeIcon()}
-            <Text style={styles.infoText}>
-              {getRelatedEntityName()}
-            </Text>
-          </View>
+      <View style={[styles.infoContainer, { borderTopColor: colors.border }]}>
+        <View style={styles.infoItem}>
+          <Calendar size={16} color={colors.primary} />
+          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
+            {new Date(document.date).toLocaleDateString()}
+          </Text>
         </View>
+        
+        {property && (
+          <View style={styles.infoItem}>
+            <Home size={16} color={colors.primary} />
+            <Text style={[styles.infoText, { color: colors.text.secondary }]}>
+              {property.name}
+            </Text>
+          </View>
+        )}
+        
+        {tenant && (
+          <View style={styles.infoItem}>
+            <User size={16} color={colors.primary} />
+            <Text style={[styles.infoText, { color: colors.text.secondary }]}>
+              {tenant.name}
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -110,54 +93,49 @@ export default function DocumentCard({ document }: DocumentCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    marginBottom: 16,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: colors.background,
+    width: 48,
+    height: 48,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    overflow: 'hidden',
   },
-  thumbnailImage: {
-    width: '100%',
-    height: '100%',
-  },
-  content: {
+  headerInfo: {
     flex: 1,
   },
-  name: {
+  title: {
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginBottom: 6,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  type: {
+    fontSize: 14,
   },
   infoContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    borderTopWidth: 1,
+    paddingTop: 12,
+    gap: 8,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
-    marginBottom: 4,
   },
   infoText: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    marginLeft: 4,
+    fontSize: 14,
+    marginLeft: 8,
   },
 });

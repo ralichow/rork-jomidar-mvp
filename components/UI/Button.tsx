@@ -4,37 +4,38 @@ import {
   Text, 
   StyleSheet, 
   ActivityIndicator,
-  ViewStyle,
-  TextStyle,
-  View as RNView
+  TouchableOpacityProps,
+  View
 } from 'react-native';
-import colors from '@/constants/colors';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 
-type ButtonProps = {
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
+type ButtonSize = 'small' | 'medium' | 'large';
+
+interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
-  size?: 'small' | 'medium' | 'large';
-  fullWidth?: boolean;
-  disabled?: boolean;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
   icon?: React.ReactNode;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
-};
+  fullWidth?: boolean;
+}
 
 export default function Button({
   title,
-  onPress,
   variant = 'primary',
   size = 'medium',
-  fullWidth = false,
-  disabled = false,
   loading = false,
   icon,
+  fullWidth = false,
+  disabled = false,
   style,
-  textStyle
+  ...rest
 }: ButtonProps) {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  
   const getBackgroundColor = () => {
     if (disabled) return colors.text.tertiary;
     
@@ -52,6 +53,17 @@ export default function Button({
     }
   };
   
+  const getTextColor = () => {
+    if (disabled) return isDark ? colors.text.secondary : '#fff';
+    
+    switch (variant) {
+      case 'outline':
+        return colors.primary;
+      default:
+        return '#fff';
+    }
+  };
+  
   const getBorderColor = () => {
     if (disabled) return colors.text.tertiary;
     
@@ -63,31 +75,14 @@ export default function Button({
     }
   };
   
-  const getTextColor = () => {
-    if (disabled) return colors.card;
-    
-    switch (variant) {
-      case 'outline':
-        return colors.primary;
-      case 'primary':
-      case 'secondary':
-      case 'danger':
-        return colors.card;
-      default:
-        return colors.card;
-    }
-  };
-  
   const getPadding = () => {
     switch (size) {
       case 'small':
-        return { paddingVertical: 8, paddingHorizontal: 12 };
-      case 'medium':
-        return { paddingVertical: 12, paddingHorizontal: 16 };
+        return { paddingVertical: 6, paddingHorizontal: 12 };
       case 'large':
-        return { paddingVertical: 16, paddingHorizontal: 24 };
+        return { paddingVertical: 14, paddingHorizontal: 24 };
       default:
-        return { paddingVertical: 12, paddingHorizontal: 16 };
+        return { paddingVertical: 10, paddingHorizontal: 16 };
     }
   };
   
@@ -95,8 +90,6 @@ export default function Button({
     switch (size) {
       case 'small':
         return 14;
-      case 'medium':
-        return 16;
       case 'large':
         return 18;
       default:
@@ -108,35 +101,32 @@ export default function Button({
     <TouchableOpacity
       style={[
         styles.button,
-        {
+        { 
           backgroundColor: getBackgroundColor(),
           borderColor: getBorderColor(),
-          width: fullWidth ? '100%' : 'auto',
-          ...getPadding()
+          ...getPadding(),
         },
+        fullWidth && styles.fullWidth,
         style
       ]}
-      onPress={onPress}
       disabled={disabled || loading}
+      {...rest}
     >
       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <>
-          {icon && <RNView style={styles.iconContainer}>{icon}</RNView>}
-          <Text
-            style={[
-              styles.text,
-              {
-                color: getTextColor(),
-                fontSize: getFontSize()
-              },
-              textStyle
-            ]}
-          >
+        <View style={styles.contentContainer}>
+          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          <Text style={[
+            styles.text, 
+            { 
+              color: getTextColor(),
+              fontSize: getFontSize(),
+            }
+          ]}>
             {title}
           </Text>
-        </>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -145,14 +135,20 @@ export default function Button({
 const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
+  },
+  fullWidth: {
+    width: '100%',
   },
   text: {
     fontWeight: '600',
-    textAlign: 'center',
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconContainer: {
     marginRight: 8,

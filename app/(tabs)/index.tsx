@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Building2, CreditCard, HomeIcon, Plus, Users, AlertCircle, FileText } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 import StatCard from '@/components/UI/StatCard';
 import DashboardCard from '@/components/UI/DashboardCard';
 
@@ -19,6 +20,8 @@ export default function DashboardScreen() {
   } = useAppStore();
   
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   
   // Calculate pending/overdue/underpaid payments
   const pendingPayments = payments.filter(p => p.status === 'pending');
@@ -26,7 +29,7 @@ export default function DashboardScreen() {
   const underpaidPayments = payments.filter(p => p.status === 'underpaid');
   
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         style={styles.scrollContainer} 
         showsVerticalScrollIndicator={false}
@@ -34,8 +37,8 @@ export default function DashboardScreen() {
         stickyHeaderIndices={[0]}
       >
         {/* Sticky Header - Only this part should be sticky */}
-        <View style={styles.stickyHeader}>
-          <Text style={styles.appName}>{t('app_name')}</Text>
+        <View style={[styles.stickyHeader, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+          <Text style={[styles.appName, { color: colors.text.primary }]}>{t('app_name')}</Text>
         </View>
         
         {/* Stats Section - This should scroll normally */}
@@ -76,18 +79,18 @@ export default function DashboardScreen() {
         </View>
         
         {(pendingPayments.length > 0 || overduePayments.length > 0 || underpaidPayments.length > 0) && (
-          <View style={styles.alertContainer}>
+          <View style={[styles.alertContainer, { backgroundColor: colors.card, borderLeftColor: colors.warning }]}>
             <View style={styles.alertHeader}>
               <AlertCircle size={20} color={colors.warning} />
-              <Text style={styles.alertTitle}>{t('payment_alerts')}</Text>
+              <Text style={[styles.alertTitle, { color: colors.text.primary }]}>{t('payment_alerts')}</Text>
             </View>
             
             {pendingPayments.length > 0 && (
               <TouchableOpacity 
-                style={styles.alertItem}
+                style={[styles.alertItem, { borderBottomColor: colors.border }]}
                 onPress={() => router.push('/payments')}
               >
-                <Text style={styles.alertText}>
+                <Text style={[styles.alertText, { color: colors.warning }]}>
                   {pendingPayments.length} {pendingPayments.length > 1 ? t('pending_payments_plural') : t('pending_payments')}
                 </Text>
               </TouchableOpacity>
@@ -95,7 +98,7 @@ export default function DashboardScreen() {
             
             {overduePayments.length > 0 && (
               <TouchableOpacity 
-                style={styles.alertItem}
+                style={[styles.alertItem, { borderBottomColor: colors.border }]}
                 onPress={() => router.push('/payments')}
               >
                 <Text style={[styles.alertText, { color: colors.danger }]}>
@@ -106,7 +109,7 @@ export default function DashboardScreen() {
             
             {underpaidPayments.length > 0 && (
               <TouchableOpacity 
-                style={styles.alertItem}
+                style={[styles.alertItem, { borderBottomColor: colors.border }]}
                 onPress={() => router.push('/payments')}
               >
                 <Text style={[styles.alertText, { color: colors.accent }]}>
@@ -118,7 +121,7 @@ export default function DashboardScreen() {
         )}
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('manage_your_properties')}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('manage_your_properties')}</Text>
           
           <DashboardCard
             title={t('properties')}
@@ -154,47 +157,47 @@ export default function DashboardScreen() {
         </View>
         
         <View style={styles.quickActionsContainer}>
-          <Text style={styles.sectionTitle}>{t('quick_actions')}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('quick_actions')}</Text>
           
           <View style={styles.quickActions}>
             <TouchableOpacity 
-              style={styles.quickAction}
+              style={[styles.quickAction, { backgroundColor: colors.card }]}
               onPress={() => router.push('/property/add')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: `${colors.primary}15` }]}>
                 <Building2 size={24} color={colors.primary} />
               </View>
-              <Text style={styles.quickActionText}>{t('add_property')}</Text>
+              <Text style={[styles.quickActionText, { color: colors.text.primary }]}>{t('add_property')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.quickAction}
+              style={[styles.quickAction, { backgroundColor: colors.card }]}
               onPress={() => router.push('/tenant/add')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: `${colors.secondary}15` }]}>
                 <Users size={24} color={colors.secondary} />
               </View>
-              <Text style={styles.quickActionText}>{t('add_tenant')}</Text>
+              <Text style={[styles.quickActionText, { color: colors.text.primary }]}>{t('add_tenant')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.quickAction}
+              style={[styles.quickAction, { backgroundColor: colors.card }]}
               onPress={() => router.push('/payment/add')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: `${colors.success}15` }]}>
                 <CreditCard size={24} color={colors.success} />
               </View>
-              <Text style={styles.quickActionText}>{t('record_payment')}</Text>
+              <Text style={[styles.quickActionText, { color: colors.text.primary }]}>{t('record_payment')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.quickAction}
+              style={[styles.quickAction, { backgroundColor: colors.card }]}
               onPress={() => router.push('/document/add')}
             >
               <View style={[styles.quickActionIcon, { backgroundColor: `${colors.accent}15` }]}>
                 <FileText size={24} color={colors.accent} />
               </View>
-              <Text style={styles.quickActionText}>{t('add_document')}</Text>
+              <Text style={[styles.quickActionText, { color: colors.text.primary }]}>{t('add_document')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -206,7 +209,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollContainer: {
     flex: 1,
@@ -215,17 +217,14 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   stickyHeader: {
-    backgroundColor: colors.background,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     zIndex: 10,
   },
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.text.primary,
   },
   statsContainer: {
     padding: 16,
@@ -234,15 +233,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+    gap: 12, // Add gap to ensure proper spacing
   },
   alertContainer: {
     margin: 16,
     marginTop: 0,
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: colors.warning,
   },
   alertHeader: {
     flexDirection: 'row',
@@ -252,17 +250,14 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text.primary,
     marginLeft: 8,
   },
   alertItem: {
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   alertText: {
     fontSize: 14,
-    color: colors.warning,
     fontWeight: '500',
   },
   section: {
@@ -272,7 +267,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text.primary,
     marginBottom: 12,
   },
   quickActionsContainer: {
@@ -285,7 +279,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   quickAction: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -302,7 +295,6 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     fontSize: 14,
-    color: colors.text.primary,
     fontWeight: '500',
     textAlign: 'center',
   },

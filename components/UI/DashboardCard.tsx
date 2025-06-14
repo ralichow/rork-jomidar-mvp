@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import colors from '@/constants/colors';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 
 type DashboardCardProps = {
   title: string;
@@ -15,20 +16,30 @@ export default function DashboardCard({
   count,
   icon,
   onPress,
-  color = colors.primary
+  color
 }: DashboardCardProps) {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  
+  // Use the provided color or default to primary
+  const cardColor = color || colors.primary;
+  
   return (
     <TouchableOpacity 
-      style={[styles.container, { borderLeftColor: color }]} 
+      style={[styles.container, { 
+        backgroundColor: colors.card, 
+        borderLeftColor: cardColor,
+        shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#000',
+      }]} 
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
+      <View style={[styles.iconContainer, { backgroundColor: `${cardColor}15` }]}>
         {icon}
       </View>
       <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={[styles.count, { color }]}>{count}</Text>
+        <Text style={[styles.title, { color: colors.text.secondary }]}>{title}</Text>
+        <Text style={[styles.count, { color: cardColor }]}>{count}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -36,13 +47,11 @@ export default function DashboardCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -62,7 +71,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    color: colors.text.secondary,
     marginBottom: 4,
   },
   count: {
