@@ -26,18 +26,17 @@ export default function DashboardScreen() {
   
   return (
     <View style={styles.container}>
-      {/* Fixed Header */}
-      <View style={styles.fixedHeader}>
-        <Text style={styles.appName}>{t('app_name')}</Text>
-      </View>
-      
-      {/* Scrollable Content */}
       <ScrollView 
         style={styles.scrollContainer} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         stickyHeaderIndices={[0]}
       >
+        {/* Sticky Header */}
+        <View style={styles.stickyHeader}>
+          <Text style={styles.appName}>{t('app_name')}</Text>
+        </View>
+        
         <View style={styles.statsContainer}>
           <StatCard
             title={t('properties')}
@@ -192,38 +191,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  fixedHeader: {
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  stickyHeader: {
     backgroundColor: colors.background,
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     zIndex: 10,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
   },
   appName: {
     fontSize: 32,
     fontWeight: '700',
     color: colors.text.primary,
   },
-  scrollContainer: {
-    flex: 1,
-    marginTop: 60, // Space for fixed header
-  },
-  scrollContent: {
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
   statsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     padding: 16,
-    paddingTop: 0,
     gap: 12,
   },
   alertContainer: {
