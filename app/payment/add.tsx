@@ -1,0 +1,506 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Calendar, CreditCard, DollarSign, FileText, User, X } from 'lucide-react-native';
+import colors from '@/constants/colors';
+import { useAppStore } from '@/store/appStore';
+import Button from '@/components/UI/Button';
+
+export default function AddPaymentScreen() {
+  const router = useRouter();
+  const { tenants, properties, addPayment } = useAppStore();
+  
+  const [selectedTenantId, setSelectedTenantId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
+  const [type, setType] = useState<'rent' | 'utility' | 'maintenance' | 'deposit'>('rent');
+  const [status, setStatus] = useState<'paid' | 'pending' | 'overdue'>('paid');
+  const [month, setMonth] = useState(
+    `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`
+  ); // Current month
+  const [notes, setNotes] = useState('');
+  const [receiptUrl, setReceiptUrl] = useState('');
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Get tenant details
+  const selectedTenant = tenants.find(t => t.id === selectedTenantId);
+  const property = selectedTenant 
+    ? properties.find(p => p.id === selectedTenant.propertyId) 
+    : null;
+  const unit = selectedTenant && property
+    ? property.units.find(u => u.id === selectedTenant.unitId)
+    : null;
+  
+  const handleSubmit = () => {
+    // Validate required fields
+    if (!selectedTenantId) {
+      Alert.alert('Error', 'Please select a tenant');
+      return;
+    }
+    
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+    
+    if (!date) {
+      Alert.alert('Error', 'Please enter a payment date');
+      return;
+    }
+    
+    if (!month) {
+      Alert.alert('Error', 'Please enter a payment month');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      addPayment({
+        tenantId: selectedTenantId,
+        unitId: selectedTenant!.unitId,
+        propertyId: selectedTenant!.propertyId,
+        amount: Number(amount),
+        date,
+        type,
+        status,
+        month,
+        notes,
+        receiptUrl: receiptUrl || undefined
+      });
+      
+      router.replace('/payments');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add payment');
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={styles.contentContainer}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.formContainer}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Select Tenant</Text>
+          <ScrollView 
+            style={styles.tenantSelector}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          >
+            {tenants.map(tenant => (
+              <TouchableOpacity
+                key={tenant.id}
+                style={[
+                  styles.tenantOption,
+                  selectedTenantId === tenant.id && styles.selectedTenantOption
+                ]}
+                onPress={() => {
+                  setSelectedTenantId(tenant.id);
+                  // Auto-fill amount with tenant's rent if payment type is rent
+                  if (type === 'rent') {
+                    setAmount(tenant.monthlyRent.toString());
+                  }
+                }}
+              >
+                <Text style={[
+                  styles.tenantOptionText,
+                  selectedTenantId === tenant.id && styles.selectedTenantOptionText
+                ]}>
+                  {tenant.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          
+          {selectedTenant && (
+            <View style={styles.selectedTenantInfo}>
+              <Text style={styles.selectedTenantProperty}>
+                {property?.name}, Unit {unit?.unitNumber}
+              </Text>
+              <Text style={styles.selectedTenantRent}>
+                Monthly Rent: ৳{selectedTenant.monthlyRent.toLocaleString()}
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Payment Type</Text>
+          <View style={styles.typeSelector}>
+            <TouchableOpacity
+              style={[
+                styles.typeOption,
+                type === 'rent' && styles.selectedTypeOption
+              ]}
+              onPress={() => {
+                setType('rent');
+                // Auto-fill amount with tenant's rent if tenant is selected
+                if (selectedTenant) {
+                  setAmount(selectedTenant.monthlyRent.toString());
+                }
+              }}
+            >
+              <Text style={[
+                styles.typeOptionText,
+                type === 'rent' && styles.selectedTypeOptionText
+              ]}>
+                Rent
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.typeOption,
+                type === 'utility' && styles.selectedTypeOption
+              ]}
+              onPress={() => setType('utility')}
+            >
+              <Text style={[
+                styles.typeOptionText,
+                type === 'utility' && styles.selectedTypeOptionText
+              ]}>
+                Utility
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.typeOption,
+                type === 'maintenance' && styles.selectedTypeOption
+              ]}
+              onPress={() => setType('maintenance')}
+            >
+              <Text style={[
+                styles.typeOptionText,
+                type === 'maintenance' && styles.selectedTypeOptionText
+              ]}>
+                Maintenance
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.typeOption,
+                type === 'deposit' && styles.selectedTypeOption
+              ]}
+              onPress={() => {
+                setType('deposit');
+                // Auto-fill amount with tenant's security deposit if tenant is selected
+                if (selectedTenant) {
+                  setAmount(selectedTenant.securityDeposit.toString());
+                }
+              }}
+            >
+              <Text style={[
+                styles.typeOptionText,
+                type === 'deposit' && styles.selectedTypeOptionText
+              ]}>
+                Deposit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Amount (৳)</Text>
+          <View style={styles.inputContainer}>
+            <DollarSign size={20} color={colors.text.tertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter payment amount"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              placeholderTextColor={colors.text.tertiary}
+            />
+          </View>
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Payment Status</Text>
+          <View style={styles.statusSelector}>
+            <TouchableOpacity
+              style={[
+                styles.statusOption,
+                status === 'paid' && styles.selectedStatusOption,
+                status === 'paid' && { backgroundColor: `${colors.success}20` }
+              ]}
+              onPress={() => setStatus('paid')}
+            >
+              <Text style={[
+                styles.statusOptionText,
+                status === 'paid' && styles.selectedStatusOptionText,
+                status === 'paid' && { color: colors.success }
+              ]}>
+                Paid
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.statusOption,
+                status === 'pending' && styles.selectedStatusOption,
+                status === 'pending' && { backgroundColor: `${colors.warning}20` }
+              ]}
+              onPress={() => setStatus('pending')}
+            >
+              <Text style={[
+                styles.statusOptionText,
+                status === 'pending' && styles.selectedStatusOptionText,
+                status === 'pending' && { color: colors.warning }
+              ]}>
+                Pending
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.statusOption,
+                status === 'overdue' && styles.selectedStatusOption,
+                status === 'overdue' && { backgroundColor: `${colors.danger}20` }
+              ]}
+              onPress={() => setStatus('overdue')}
+            >
+              <Text style={[
+                styles.statusOptionText,
+                status === 'overdue' && styles.selectedStatusOptionText,
+                status === 'overdue' && { color: colors.danger }
+              ]}>
+                Overdue
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Payment Date</Text>
+          <View style={styles.inputContainer}>
+            <Calendar size={20} color={colors.text.tertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="YYYY-MM-DD"
+              value={date}
+              onChangeText={setDate}
+              placeholderTextColor={colors.text.tertiary}
+            />
+          </View>
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Payment Month</Text>
+          <View style={styles.inputContainer}>
+            <Calendar size={20} color={colors.text.tertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="YYYY-MM"
+              value={month}
+              onChangeText={setMonth}
+              placeholderTextColor={colors.text.tertiary}
+            />
+          </View>
+          <Text style={styles.helperText}>
+            Format: YYYY-MM (e.g., 2023-06 for June 2023)
+          </Text>
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Notes (Optional)</Text>
+          <View style={[styles.inputContainer, { height: 80, alignItems: 'flex-start', paddingVertical: 8 }]}>
+            <TextInput
+              style={[styles.input, { height: '100%', textAlignVertical: 'top' }]}
+              placeholder="Enter any additional notes"
+              value={notes}
+              onChangeText={setNotes}
+              placeholderTextColor={colors.text.tertiary}
+              multiline
+            />
+          </View>
+        </View>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Receipt URL (Optional)</Text>
+          <View style={styles.inputContainer}>
+            <FileText size={20} color={colors.text.tertiary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter receipt URL"
+              value={receiptUrl}
+              onChangeText={setReceiptUrl}
+              placeholderTextColor={colors.text.tertiary}
+            />
+          </View>
+        </View>
+      </View>
+      
+      <View style={styles.buttonContainer}>
+        <Button
+          title="Cancel"
+          onPress={() => router.back()}
+          variant="outline"
+          style={{ flex: 1, marginRight: 8 }}
+        />
+        <Button
+          title="Record Payment"
+          onPress={handleSubmit}
+          variant="primary"
+          loading={isSubmitting}
+          style={{ flex: 2 }}
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    padding: 16,
+  },
+  formContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 8,
+  },
+  tenantSelector: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  tenantOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  selectedTenantOption: {
+    backgroundColor: `${colors.primary}20`,
+    borderColor: colors.primary,
+  },
+  tenantOptionText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  selectedTenantOptionText: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  selectedTenantInfo: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  selectedTenantProperty: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 4,
+  },
+  selectedTenantRent: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  typeOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flex: 1,
+    minWidth: '45%',
+    alignItems: 'center',
+  },
+  selectedTypeOption: {
+    backgroundColor: `${colors.primary}20`,
+    borderColor: colors.primary,
+  },
+  typeOptionText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  selectedTypeOptionText: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  statusSelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statusOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flex: 1,
+    alignItems: 'center',
+  },
+  selectedStatusOption: {
+    borderColor: 'transparent',
+  },
+  statusOptionText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  selectedStatusOptionText: {
+    fontWeight: '600',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    color: colors.text.primary,
+    fontSize: 16,
+  },
+  helperText: {
+    fontSize: 12,
+    color: colors.text.tertiary,
+    marginTop: 4,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+});
