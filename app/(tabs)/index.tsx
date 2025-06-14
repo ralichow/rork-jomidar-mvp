@@ -1,15 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Building2, Home, Users, CreditCard, AlertTriangle, Plus } from 'lucide-react-native';
+import { Building2, Home, Users, CreditCard, AlertTriangle, Plus, ArrowRight } from 'lucide-react-native';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
 import { useTheme } from '@/store/themeStore';
 import { getColors } from '@/constants/colors';
 import DashboardCard from '@/components/UI/DashboardCard';
-import PropertyCard from '@/components/UI/PropertyCard';
-import TenantCard from '@/components/UI/TenantCard';
-import PaymentCard from '@/components/UI/PaymentCard';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -18,10 +15,13 @@ export default function DashboardScreen() {
   const { isDark } = useTheme();
   const colors = getColors(isDark);
   
-  const stats = dashboardStats;
+  // Recalculate stats on component mount
+  React.useEffect(() => {
+    const appStore = useAppStore.getState();
+    appStore.recalculateStats();
+  }, []);
   
-  const recentTenants = tenants.slice(0, 3);
-  const recentPayments = payments.slice(0, 3);
+  const stats = dashboardStats;
   
   const renderEmptyState = () => {
     if (properties.length === 0) {
@@ -104,7 +104,7 @@ export default function DashboardScreen() {
           />
           <DashboardCard
             title={t('occupancy')}
-            value={`${stats.occupancyRate}%`}
+            value={`${stats.occupancyRate.toFixed(0)}%`}
             icon={<Users size={20} color={colors.success} />}
             color={colors.success}
             width="48%"
@@ -149,34 +149,113 @@ export default function DashboardScreen() {
           </View>
         )}
         
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-              {t('recent_tenants')}
+        <Text style={[styles.sectionTitle, { color: colors.text.primary, marginTop: 24 }]}>
+          {t('manage_your_properties')}
+        </Text>
+        
+        <View style={styles.cardGrid}>
+          <TouchableOpacity 
+            style={[styles.card, { backgroundColor: colors.card }]} 
+            onPress={() => router.push('/(tabs)/properties')}
+          >
+            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.primary}15` }]}>
+              <Building2 size={24} color={colors.primary} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('properties')}</Text>
+            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
+              {stats.totalProperties} {t('properties')}
             </Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/tenants')}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('see_all')}</Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.cardAction}>
+              <ArrowRight size={16} color={colors.primary} />
+            </View>
+          </TouchableOpacity>
           
-          {recentTenants.map((tenant) => (
-            <TenantCard key={tenant.id} tenant={tenant} />
-          ))}
+          <TouchableOpacity 
+            style={[styles.card, { backgroundColor: colors.card }]} 
+            onPress={() => router.push('/(tabs)/tenants')}
+          >
+            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.accent}15` }]}>
+              <Users size={24} color={colors.accent} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('tenants')}</Text>
+            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
+              {tenants.length} {tenants.length === 1 ? t('tenant') : t('tenants')}
+            </Text>
+            <View style={styles.cardAction}>
+              <ArrowRight size={16} color={colors.accent} />
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.card, { backgroundColor: colors.card }]} 
+            onPress={() => router.push('/(tabs)/payments')}
+          >
+            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.success}15` }]}>
+              <CreditCard size={24} color={colors.success} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('payments')}</Text>
+            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
+              {payments.length} {payments.length === 1 ? t('payment') : t('payments')}
+            </Text>
+            <View style={styles.cardAction}>
+              <ArrowRight size={16} color={colors.success} />
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.card, { backgroundColor: colors.card }]} 
+            onPress={() => router.push('/(tabs)/documents')}
+          >
+            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.info}15` }]}>
+              <FileText size={24} color={colors.info} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('documents')}</Text>
+            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
+              {/* Get document count from store */}
+              {useAppStore.getState().documents.length} {useAppStore.getState().documents.length === 1 ? t('document') : t('documents')}
+            </Text>
+            <View style={styles.cardAction}>
+              <ArrowRight size={16} color={colors.info} />
+            </View>
+          </TouchableOpacity>
         </View>
         
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-              {t('recent_payments')}
-            </Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/payments')}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('see_all')}</Text>
-            </TouchableOpacity>
-          </View>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary, marginTop: 24 }]}>
+          {t('quick_actions')}
+        </Text>
+        
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => router.push('/property/add')}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>{t('add_property')}</Text>
+          </TouchableOpacity>
           
-          {recentPayments.map((payment) => (
-            <PaymentCard key={payment.id} payment={payment} />
-          ))}
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.accent }]}
+            onPress={() => router.push('/tenant/add')}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>{t('add_tenant')}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.success }]}
+            onPress={() => router.push('/payment/add')}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>{t('record_payment')}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.info }]}
+            onPress={() => router.push('/document/add')}
+          >
+            <Plus size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>{t('add_document')}</Text>
+          </TouchableOpacity>
         </View>
       </>
     );
@@ -221,7 +300,7 @@ const styles = StyleSheet.create({
   alertsContainer: {
     borderRadius: 12,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   alertsHeader: {
     flexDirection: 'row',
@@ -239,22 +318,66 @@ const styles = StyleSheet.create({
   alertItem: {
     fontSize: 14,
   },
-  sectionContainer: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
+    marginBottom: 16,
   },
-  seeAllText: {
+  cardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: '48%',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  cardIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  cardValue: {
     fontSize: 14,
-    fontWeight: '500',
+    marginBottom: 8,
+  },
+  cardAction: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   emptyState: {
     borderRadius: 12,
