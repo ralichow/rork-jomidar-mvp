@@ -1,408 +1,309 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Building2, Home, Users, CreditCard, AlertTriangle, Plus, ArrowRight } from 'lucide-react-native';
+import { Building2, CreditCard, HomeIcon, Plus, Users, AlertCircle, FileText } from 'lucide-react-native';
+import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
-import { useTheme } from '@/store/themeStore';
-import { getColors } from '@/constants/colors';
+import StatCard from '@/components/UI/StatCard';
 import DashboardCard from '@/components/UI/DashboardCard';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { properties, tenants, payments, dashboardStats } = useAppStore();
+  const { 
+    properties, 
+    tenants, 
+    payments, 
+    documents,
+    dashboardStats 
+  } = useAppStore();
+  
   const { t } = useTranslation();
-  const { isDark } = useTheme();
-  const colors = getColors(isDark);
   
-  // Recalculate stats on component mount
-  React.useEffect(() => {
-    const appStore = useAppStore.getState();
-    appStore.recalculateStats();
-  }, []);
+  // Calculate pending/overdue/underpaid payments
+  const pendingPayments = payments.filter(p => p.status === 'pending');
+  const overduePayments = payments.filter(p => p.status === 'overdue');
+  const underpaidPayments = payments.filter(p => p.status === 'underpaid');
   
-  const stats = dashboardStats;
-  
-  const renderEmptyState = () => {
-    if (properties.length === 0) {
-      return (
-        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-          <Building2 size={48} color={colors.primary} />
-          <Text style={[styles.emptyStateTitle, { color: colors.text.primary }]}>
-            {t('add_first_property')}
-          </Text>
-          <TouchableOpacity
-            style={[styles.emptyStateButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/property/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.emptyStateButtonText}>{t('add_property')}</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    
-    if (tenants.length === 0) {
-      return (
-        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-          <Users size={48} color={colors.primary} />
-          <Text style={[styles.emptyStateTitle, { color: colors.text.primary }]}>
-            {t('add_first_tenant')}
-          </Text>
-          <TouchableOpacity
-            style={[styles.emptyStateButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/tenant/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.emptyStateButtonText}>{t('add_tenant')}</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    
-    if (payments.length === 0) {
-      return (
-        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-          <CreditCard size={48} color={colors.primary} />
-          <Text style={[styles.emptyStateTitle, { color: colors.text.primary }]}>
-            {t('record_first_payment')}
-          </Text>
-          <TouchableOpacity
-            style={[styles.emptyStateButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/payment/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.emptyStateButtonText}>{t('record_payment')}</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    
-    return null;
-  };
-  
-  const renderDashboardContent = () => {
-    if (properties.length === 0 || tenants.length === 0 || payments.length === 0) {
-      return renderEmptyState();
-    }
-    
-    return (
-      <>
-        <View style={styles.statsContainer}>
-          <DashboardCard
-            title={t('properties')}
-            value={stats.totalProperties}
-            icon={<Building2 size={20} color={colors.primary} />}
-            width="48%"
-          />
-          <DashboardCard
-            title={t('units')}
-            value={stats.totalUnits}
-            icon={<Home size={20} color={colors.accent} />}
-            color={colors.accent}
-            width="48%"
-          />
-          <DashboardCard
-            title={t('occupancy')}
-            value={`${stats.occupancyRate.toFixed(0)}%`}
-            icon={<Users size={20} color={colors.success} />}
-            color={colors.success}
-            width="48%"
-          />
-          <DashboardCard
-            title={t('monthly_revenue')}
-            value={`৳${stats.monthlyRevenue.toLocaleString()}`}
-            icon={<CreditCard size={20} color={colors.info} />}
-            color={colors.info}
-            width="48%"
-          />
+  return (
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        stickyHeaderIndices={[0]}
+      >
+        {/* Sticky Header - Only this part should be sticky */}
+        <View style={styles.stickyHeader}>
+          <Text style={styles.appName}>{t('app_name')}</Text>
         </View>
         
-        {(stats.pendingPayments > 0 || stats.overduePayments > 0 || stats.underpaidPayments > 0) && (
-          <View style={[styles.alertsContainer, { backgroundColor: `${colors.warning}15` }]}>
-            <View style={styles.alertsHeader}>
-              <AlertTriangle size={20} color={colors.warning} />
-              <Text style={[styles.alertsTitle, { color: colors.text.primary }]}>
-                {t('payment_alerts')}
-              </Text>
+        {/* Stats Section - This should scroll normally */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statsRow}>
+            <StatCard
+              title={t('properties')}
+              value={dashboardStats.totalProperties}
+              icon={<Building2 size={18} color={colors.primary} />}
+              color={colors.primary}
+            />
+            
+            <StatCard
+              title={t('units')}
+              value={dashboardStats.totalUnits}
+              icon={<HomeIcon size={18} color={colors.secondary} />}
+              color={colors.secondary}
+            />
+          </View>
+          
+          <View style={styles.statsRow}>
+            <StatCard
+              title={t('occupancy')}
+              value={Math.round(dashboardStats.occupancyRate)}
+              icon={<Users size={18} color={colors.accent} />}
+              color={colors.accent}
+              isPercentage
+            />
+            
+            <StatCard
+              title={t('monthly_revenue')}
+              value={dashboardStats.monthlyRevenue}
+              icon={<CreditCard size={18} color={colors.success} />}
+              color={colors.success}
+              isCurrency
+            />
+          </View>
+        </View>
+        
+        {(pendingPayments.length > 0 || overduePayments.length > 0 || underpaidPayments.length > 0) && (
+          <View style={styles.alertContainer}>
+            <View style={styles.alertHeader}>
+              <AlertCircle size={20} color={colors.warning} />
+              <Text style={styles.alertTitle}>{t('payment_alerts')}</Text>
             </View>
             
-            <View style={styles.alertsList}>
-              {stats.pendingPayments > 0 && (
-                <Text style={[styles.alertItem, { color: colors.text.secondary }]}>
-                  {stats.pendingPayments} {stats.pendingPayments === 1 ? t('pending_payments') : t('pending_payments_plural')}
+            {pendingPayments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.alertItem}
+                onPress={() => router.push('/payments')}
+              >
+                <Text style={styles.alertText}>
+                  {pendingPayments.length} {pendingPayments.length > 1 ? t('pending_payments_plural') : t('pending_payments')}
                 </Text>
-              )}
-              
-              {stats.overduePayments > 0 && (
-                <Text style={[styles.alertItem, { color: colors.text.secondary }]}>
-                  {stats.overduePayments} {stats.overduePayments === 1 ? t('overdue_payments') : t('overdue_payments_plural')}
+              </TouchableOpacity>
+            )}
+            
+            {overduePayments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.alertItem}
+                onPress={() => router.push('/payments')}
+              >
+                <Text style={[styles.alertText, { color: colors.danger }]}>
+                  {overduePayments.length} {overduePayments.length > 1 ? t('overdue_payments_plural') : t('overdue_payments')}
                 </Text>
-              )}
-              
-              {stats.underpaidPayments > 0 && (
-                <Text style={[styles.alertItem, { color: colors.text.secondary }]}>
-                  {stats.underpaidPayments} {stats.underpaidPayments === 1 ? t('underpaid_payments') : t('underpaid_payments_plural')}
+              </TouchableOpacity>
+            )}
+            
+            {underpaidPayments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.alertItem}
+                onPress={() => router.push('/payments')}
+              >
+                <Text style={[styles.alertText, { color: colors.accent }]}>
+                  {underpaidPayments.length} {underpaidPayments.length > 1 ? t('underpaid_payments_plural') : t('underpaid_payments')}
                 </Text>
-              )}
-            </View>
+              </TouchableOpacity>
+            )}
           </View>
         )}
         
-        <Text style={[styles.sectionTitle, { color: colors.text.primary, marginTop: 24 }]}>
-          {t('manage_your_properties')}
-        </Text>
-        
-        <View style={styles.cardGrid}>
-          <TouchableOpacity 
-            style={[styles.card, { backgroundColor: colors.card }]} 
-            onPress={() => router.push('/(tabs)/properties')}
-          >
-            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.primary}15` }]}>
-              <Building2 size={24} color={colors.primary} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('properties')}</Text>
-            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
-              {stats.totalProperties} {t('properties')}
-            </Text>
-            <View style={styles.cardAction}>
-              <ArrowRight size={16} color={colors.primary} />
-            </View>
-          </TouchableOpacity>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('manage_your_properties')}</Text>
           
-          <TouchableOpacity 
-            style={[styles.card, { backgroundColor: colors.card }]} 
-            onPress={() => router.push('/(tabs)/tenants')}
-          >
-            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.accent}15` }]}>
-              <Users size={24} color={colors.accent} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('tenants')}</Text>
-            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
-              {tenants.length} {tenants.length === 1 ? t('tenant') : t('tenants')}
-            </Text>
-            <View style={styles.cardAction}>
-              <ArrowRight size={16} color={colors.accent} />
-            </View>
-          </TouchableOpacity>
+          <DashboardCard
+            title={t('properties')}
+            count={properties.length}
+            icon={<Building2 size={24} color={colors.primary} />}
+            onPress={() => router.push('/properties')}
+            color={colors.primary}
+          />
           
-          <TouchableOpacity 
-            style={[styles.card, { backgroundColor: colors.card }]} 
-            onPress={() => router.push('/(tabs)/payments')}
-          >
-            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.success}15` }]}>
-              <CreditCard size={24} color={colors.success} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('payments')}</Text>
-            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
-              {payments.length} {payments.length === 1 ? t('payment') : t('payments')}
-            </Text>
-            <View style={styles.cardAction}>
-              <ArrowRight size={16} color={colors.success} />
-            </View>
-          </TouchableOpacity>
+          <DashboardCard
+            title={t('tenants')}
+            count={tenants.length}
+            icon={<Users size={24} color={colors.secondary} />}
+            onPress={() => router.push('/tenants')}
+            color={colors.secondary}
+          />
           
-          <TouchableOpacity 
-            style={[styles.card, { backgroundColor: colors.card }]} 
-            onPress={() => router.push('/(tabs)/documents')}
-          >
-            <View style={[styles.cardIconContainer, { backgroundColor: `${colors.info}15` }]}>
-              <FileText size={24} color={colors.info} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text.primary }]}>{t('documents')}</Text>
-            <Text style={[styles.cardValue, { color: colors.text.secondary }]}>
-              {/* Get document count from store */}
-              {useAppStore.getState().documents.length} {useAppStore.getState().documents.length === 1 ? t('document') : t('documents')}
-            </Text>
-            <View style={styles.cardAction}>
-              <ArrowRight size={16} color={colors.info} />
-            </View>
-          </TouchableOpacity>
+          <DashboardCard
+            title={t('payments')}
+            count={payments.length}
+            icon={<CreditCard size={24} color={colors.success} />}
+            onPress={() => router.push('/payments')}
+            color={colors.success}
+          />
+          
+          <DashboardCard
+            title={t('documents')}
+            count={documents.length}
+            icon={<FileText size={24} color={colors.accent} />}
+            onPress={() => router.push('/documents')}
+            color={colors.accent}
+          />
         </View>
         
-        <Text style={[styles.sectionTitle, { color: colors.text.primary, marginTop: 24 }]}>
-          {t('quick_actions')}
-        </Text>
-        
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/property/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>{t('add_property')}</Text>
-          </TouchableOpacity>
+        <View style={styles.quickActionsContainer}>
+          <Text style={styles.sectionTitle}>{t('quick_actions')}</Text>
           
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.accent }]}
-            onPress={() => router.push('/tenant/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>{t('add_tenant')}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.success }]}
-            onPress={() => router.push('/payment/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>{t('record_payment')}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.info }]}
-            onPress={() => router.push('/document/add')}
-          >
-            <Plus size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>{t('add_document')}</Text>
-          </TouchableOpacity>
+          <View style={styles.quickActions}>
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/property/add')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.primary}15` }]}>
+                <Building2 size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.quickActionText}>{t('add_property')}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/tenant/add')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.secondary}15` }]}>
+                <Users size={24} color={colors.secondary} />
+              </View>
+              <Text style={styles.quickActionText}>{t('add_tenant')}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/payment/add')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.success}15` }]}>
+                <CreditCard size={24} color={colors.success} />
+              </View>
+              <Text style={styles.quickActionText}>{t('record_payment')}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/document/add')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.accent}15` }]}>
+                <FileText size={24} color={colors.accent} />
+              </View>
+              <Text style={styles.quickActionText}>{t('add_document')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </>
-    );
-  };
-  
-  return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={[styles.appName, { color: colors.text.primary }]}>{t('app_name')}</Text>
-      <Text style={[styles.appSubtitle, { color: colors.text.secondary }]}>{t('app_subtitle')}</Text>
-      
-      {renderDashboardContent()}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 32,
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  stickyHeader: {
+    backgroundColor: colors.background,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 10,
   },
   appName: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
-    marginBottom: 4,
-  },
-  appSubtitle: {
-    fontSize: 16,
-    marginBottom: 24,
+    color: colors.text.primary,
   },
   statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    padding: 16,
   },
-  alertsContainer: {
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  alertContainer: {
+    margin: 16,
+    marginTop: 0,
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.warning,
   },
-  alertsHeader: {
+  alertHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  alertsTitle: {
+  alertTitle: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.text.primary,
     marginLeft: 8,
   },
-  alertsList: {
-    gap: 8,
-  },
   alertItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  alertText: {
     fontSize: 14,
+    color: colors.warning,
+    fontWeight: '500',
+  },
+  section: {
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontWeight: '700',
+    color: colors.text.primary,
+    marginBottom: 12,
   },
-  cardGrid: {
+  quickActionsContainer: {
+    paddingHorizontal: 16,
+  },
+  quickActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: 12,
   },
-  card: {
-    width: '48%',
+  quickAction: {
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    alignItems: 'center',
+    width: '48%',
+    marginBottom: 12,
   },
-  cardIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  cardValue: {
+  quickActionText: {
     fontSize: 14,
-    marginBottom: 8,
-  },
-  cardAction: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    width: '48%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    gap: 8,
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  emptyState: {
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    color: colors.text.primary,
+    fontWeight: '500',
     textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  emptyStateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  emptyStateButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
   },
 });

@@ -1,69 +1,72 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '@/store/themeStore';
-import { getColors } from '@/constants/colors';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import colors from '@/constants/colors';
 
 type DashboardCardProps = {
   title: string;
-  value: string | number;
+  count: number;
   icon: React.ReactNode;
+  onPress: () => void;
   color?: string;
-  width?: number | string;
 };
 
-export default function DashboardCard({ title, value, icon, color, width = '48%' }: DashboardCardProps) {
-  const { isDark } = useTheme();
-  const colors = getColors(isDark);
-  
+export default function DashboardCard({
+  title,
+  count,
+  icon,
+  onPress,
+  color = colors.primary
+}: DashboardCardProps) {
   return (
-    <View style={[
-      styles.container, 
-      { 
-        backgroundColor: colors.card,
-        shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#000',
-        width,
-      }
-    ]}>
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: `${color || colors.primary}15` }]}>
-          {icon}
-        </View>
-        <Text style={[styles.title, { color: colors.text.secondary }]}>{title}</Text>
+    <TouchableOpacity 
+      style={[styles.container, { borderLeftColor: color }]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
+        {icon}
       </View>
-      <Text style={[styles.value, { color: colors.text.primary }]}>{value}</Text>
-    </View>
+      <View style={styles.content}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.count, { color }]}>{count}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-    marginBottom: 16,
-  },
-  header: {
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    borderLeftWidth: 4,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 48,
+    height: 48,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 16,
+  },
+  content: {
+    flex: 1,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    color: colors.text.secondary,
+    marginBottom: 4,
   },
-  value: {
+  count: {
     fontSize: 24,
     fontWeight: '700',
-  },
+  }
 });

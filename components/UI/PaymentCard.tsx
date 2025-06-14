@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, CreditCard, Home, User } from 'lucide-react-native';
+import { Calendar, CreditCard, Receipt, HomeIcon } from 'lucide-react-native';
+import colors from '@/constants/colors';
 import { Payment } from '@/types';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
-import { useTheme } from '@/store/themeStore';
-import { getColors } from '@/constants/colors';
 
 type PaymentCardProps = {
   payment: Payment;
@@ -14,35 +13,73 @@ type PaymentCardProps = {
 
 export default function PaymentCard({ payment }: PaymentCardProps) {
   const router = useRouter();
-  const { properties, tenants } = useAppStore();
+  const tenants = useAppStore((state) => state.tenants);
+  const properties = useAppStore((state) => state.properties);
   const { t } = useTranslation();
-  const { isDark } = useTheme();
-  const colors = getColors(isDark);
   
   const tenant = tenants.find(t => t.id === payment.tenantId);
-  const property = properties.find(p => p.id === tenant?.propertyId);
-  const unit = property?.units.find(u => u.id === tenant?.unitId);
+  const property = properties.find(p => p.id === payment.propertyId);
+  const unit = property?.units.find(u => u.id === payment.unitId);
   
   const handlePress = () => {
     router.push(`/payment/${payment.id}`);
   };
   
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Payment['status']) => {
     switch (status) {
       case 'paid':
-        return colors.paid;
+        return colors.success;
       case 'pending':
-        return colors.pending;
-      case 'overdue':
-        return colors.overdue;
-      case 'underpaid':
         return colors.warning;
+      case 'overdue':
+        return colors.danger;
+      case 'underpaid':
+        return colors.accent;
       default:
         return colors.text.secondary;
     }
   };
   
-  const getStatusText = (status: string) => {
+  const getPaymentTypeIcon = (type: Payment['type']) => {
+    switch (type) {
+      case 'rent':
+        return <HomeIcon size={16} color={colors.primary} />;
+      case 'utility':
+        return <CreditCard size={16} color={colors.primary} />;
+      case 'maintenance':
+        return <CreditCard size={16} color={colors.primary} />;
+      case 'deposit':
+        return <CreditCard size={16} color={colors.primary} />;
+      default:
+        return <CreditCard size={16} color={colors.primary} />;
+    }
+  };
+  
+  // Format month for display (e.g., "2023-05" to "May 2023")
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+  
+  // Get translated payment type
+  const getTranslatedType = (type: Payment['type']) => {
+    switch (type) {
+      case 'rent':
+        return t('rent');
+      case 'utility':
+        return t('utility');
+      case 'maintenance':
+        return t('maintenance');
+      case 'deposit':
+        return t('deposit');
+      default:
+        return type;
+    }
+  };
+  
+  // Get translated payment status
+  const getTranslatedStatus = (status: Payment['status']) => {
     switch (status) {
       case 'paid':
         return t('paid');
@@ -57,71 +94,64 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
     }
   };
   
-  const statusColor = getStatusColor(payment.status);
-  
   return (
-    <TouchableOpacity 
-      style={[styles.container, { 
-        backgroundColor: colors.card,
-        shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#000',
-      }]} 
-      onPress={handlePress}
-    >
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={[styles.paymentId, { color: colors.text.tertiary }]}>#{payment.id.substring(0, 8)}</Text>
-          <Text style={[styles.paymentDate, { color: colors.text.primary }]}>
-            {new Date(payment.date).toLocaleDateString()}
+        <View style={styles.typeContainer}>
+          {payment.type === 'rent' && <HomeIcon size={16} color={colors.primary} />}
+          {payment.type === 'utility' && <CreditCard size={16} color={colors.primary} />}
+          {payment.type === 'maintenance' && <CreditCard size={16} color={colors.primary} />}
+          {payment.type === 'deposit' && <CreditCard size={16} color={colors.primary} />}
+          <Text style={styles.type}>
+            {getTranslatedType(payment.type)}
           </Text>
         </View>
         
-        <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20`, borderColor: statusColor }]}>
-          <Text style={[styles.statusText, { color: statusColor }]}>{getStatusText(payment.status)}</Text>
+        <View style={[
+          styles.statusBadge, 
+          { backgroundColor: `${getStatusColor(payment.status)}20` }
+        ]}>
+          <Text style={[
+            styles.statusText, 
+            { color: getStatusColor(payment.status) }
+          ]}>
+            {getTranslatedStatus(payment.status)}
+          </Text>
         </View>
       </View>
       
-      <View style={[styles.amountContainer, { borderBottomColor: colors.border }]}>
-        <View style={styles.amountRow}>
-          <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>{t('amount')}</Text>
-          <Text style={[styles.amount, { color: colors.text.primary }]}>৳{payment.amount.toLocaleString()}</Text>
-        </View>
+      <View style={styles.amountContainer}>
+        <Text style={styles.amountLabel}>{t('amount')}</Text>
+        <Text style={styles.amount}>৳{payment.amount.toLocaleString()}</Text>
         
-        {payment.status === 'underpaid' && tenant && (
-          <View style={styles.amountRow}>
-            <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>{t('remaining')}</Text>
-            <Text style={[styles.remainingAmount, { color: colors.warning }]}>
-              ৳{(tenant.monthlyRent - payment.amount).toLocaleString()}
-            </Text>
-          </View>
+        {payment.status === 'underpaid' && payment.remainingAmount && (
+          <Text style={styles.remainingAmount}>
+            {t('remaining')}: ৳{payment.remainingAmount.toLocaleString()}
+          </Text>
         )}
       </View>
       
       <View style={styles.infoContainer}>
         <View style={styles.infoItem}>
-          <User size={16} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.text.secondary }]}>{tenant?.name}</Text>
-        </View>
-        
-        <View style={styles.infoItem}>
-          <Home size={16} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            {property?.name}, {t('unit')} {unit?.unitNumber}
+          <Calendar size={16} color={colors.text.tertiary} />
+          <Text style={styles.infoText}>
+            {formatMonth(payment.month)}
           </Text>
         </View>
         
         <View style={styles.infoItem}>
-          <Calendar size={16} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            {t('payment_month')}: {new Date(payment.month + "-01").toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+          <Receipt size={16} color={colors.text.tertiary} />
+          <Text style={styles.infoText}>
+            {new Date(payment.date).toLocaleDateString()}
           </Text>
         </View>
-        
-        <View style={styles.infoItem}>
-          <CreditCard size={16} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            {t('payment_type')}: {t(payment.type)}
-          </Text>
-        </View>
+      </View>
+      
+      <View style={styles.footer}>
+        <Text style={styles.tenantName}>{tenant?.name}</Text>
+        <Text style={styles.propertyInfo}>
+          {property?.name}, {t('unit')} {unit?.unitNumber}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -129,9 +159,11 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -143,58 +175,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  headerLeft: {
-    flex: 1,
+  typeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  paymentId: {
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  paymentDate: {
+  type: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.text.primary,
+    marginLeft: 8,
   },
   statusBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderRadius: 16,
-    borderWidth: 1,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
   },
   amountContainer: {
-    borderBottomWidth: 1,
-    paddingBottom: 12,
-    marginBottom: 12,
-  },
-  amountRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 16,
   },
   amountLabel: {
-    fontSize: 14,
+    fontSize: 12,
+    color: colors.text.tertiary,
+    marginBottom: 4,
   },
   amount: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '700',
+    color: colors.text.primary,
   },
   remainingAmount: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.accent,
+    marginTop: 4,
   },
   infoContainer: {
-    gap: 8,
+    flexDirection: 'row',
+    marginBottom: 16,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 24,
   },
   infoText: {
     fontSize: 14,
+    color: colors.text.secondary,
     marginLeft: 8,
+  },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 12,
+  },
+  tenantName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 4,
+  },
+  propertyInfo: {
+    fontSize: 14,
+    color: colors.text.secondary,
   },
 });

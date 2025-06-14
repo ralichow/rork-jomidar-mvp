@@ -365,13 +365,6 @@ export const useAppStore = create<AppState>()(
         if (state && state.documents) {
           state.documents = convertLegacyDocuments(state.documents);
         }
-        
-        // Recalculate stats after rehydration
-        if (state) {
-          setTimeout(() => {
-            useAppStore.getState().recalculateStats();
-          }, 0);
-        }
       }
     }
   )

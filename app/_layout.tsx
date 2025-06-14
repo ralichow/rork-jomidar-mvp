@@ -3,11 +3,9 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import colors from "@/constants/colors";
 import { useTranslation } from "@/store/languageStore";
-import { useTheme, useThemeStore } from "@/store/themeStore";
-import { getColors } from "@/constants/colors";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -20,14 +18,6 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     ...FontAwesome.font,
   });
-  
-  const systemColorScheme = useColorScheme();
-  const setSystemColorScheme = useThemeStore((state) => state.setSystemColorScheme);
-  
-  // Update the system color scheme in the store when it changes
-  useEffect(() => {
-    setSystemColorScheme(systemColorScheme);
-  }, [systemColorScheme, setSystemColorScheme]);
 
   useEffect(() => {
     if (error) {
@@ -51,12 +41,10 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { t } = useTranslation();
-  const { isDark } = useTheme();
-  const colors = getColors(isDark);
   
   return (
     <>
-      <StatusBar style={isDark ? "light" : "dark"} />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerStyle: {

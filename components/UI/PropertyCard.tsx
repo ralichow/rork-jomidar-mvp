@@ -2,10 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Building2, Home, Users } from 'lucide-react-native';
+import colors from '@/constants/colors';
 import { Property } from '@/types';
 import { useTranslation } from '@/store/languageStore';
-import { useTheme } from '@/store/themeStore';
-import { getColors } from '@/constants/colors';
 
 type PropertyCardProps = {
   property: Property;
@@ -14,8 +13,6 @@ type PropertyCardProps = {
 export default function PropertyCard({ property }: PropertyCardProps) {
   const router = useRouter();
   const { t } = useTranslation();
-  const { isDark } = useTheme();
-  const colors = getColors(isDark);
   
   const occupancyRate = property.totalUnits > 0 
     ? Math.round((property.occupiedUnits / property.totalUnits) * 100) 
@@ -26,13 +23,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   };
   
   return (
-    <TouchableOpacity 
-      style={[styles.container, { 
-        backgroundColor: colors.card,
-        shadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : '#000',
-      }]} 
-      onPress={handlePress}
-    >
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.imageContainer}>
         <Image 
           source={{ uri: property.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80' }} 
@@ -45,23 +36,23 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       </View>
       
       <View style={styles.content}>
-        <Text style={[styles.name, { color: colors.text.primary }]}>{property.name}</Text>
-        <Text style={[styles.address, { color: colors.text.secondary }]}>{property.address}</Text>
+        <Text style={styles.name}>{property.name}</Text>
+        <Text style={styles.address}>{property.address}</Text>
         
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Building2 size={16} color={colors.primary} />
-            <Text style={[styles.statText, { color: colors.text.secondary }]}>{property.totalUnits} {t('units')}</Text>
+            <Text style={styles.statText}>{property.totalUnits} {t('units')}</Text>
           </View>
           
           <View style={styles.statItem}>
             <Users size={16} color={colors.primary} />
-            <Text style={[styles.statText, { color: colors.text.secondary }]}>{property.occupiedUnits} {t('tenants')}</Text>
+            <Text style={styles.statText}>{property.occupiedUnits} {t('tenants')}</Text>
           </View>
           
           <View style={styles.statItem}>
             <Home size={16} color={colors.primary} />
-            <Text style={[styles.statText, { color: colors.text.secondary }]}>৳{property.monthlyRevenue.toLocaleString()}{t('per_month')}</Text>
+            <Text style={styles.statText}>৳{property.monthlyRevenue.toLocaleString()}{t('per_month')}</Text>
           </View>
         </View>
       </View>
@@ -71,9 +62,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.card,
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -107,10 +100,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '700',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   address: {
     fontSize: 14,
+    color: colors.text.secondary,
     marginBottom: 12,
   },
   statsContainer: {
@@ -124,6 +119,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 13,
+    color: colors.text.secondary,
     marginLeft: 4,
   },
 });

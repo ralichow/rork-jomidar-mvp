@@ -137,8 +137,6 @@ export const en = {
   other: 'Other',
   open_document: 'Open Document',
   download_document: 'Download Document',
-  choose_from_gallery: 'Choose from Gallery',
-  take_photo: 'Take Photo',
   
   // Settings
   settings: 'Settings',
