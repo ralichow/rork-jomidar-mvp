@@ -20,6 +20,8 @@ export const bn = {
   add_first_property: 'আপনার প্রথম সম্পত্তি যোগ করুন',
   add_first_tenant: 'আপনার প্রথম ভাড়াটিয়া যোগ করুন',
   record_first_payment: 'আপনার প্রথম পেমেন্ট রেকর্ড করুন',
+  manage_your_properties: 'আপনার সম্পত্তি পরিচালনা করুন',
+  quick_actions: 'দ্রুত কার্যক্রম',
   
   // Properties
   property: 'সম্পত্তি',

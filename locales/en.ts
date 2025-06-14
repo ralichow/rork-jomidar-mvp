@@ -20,6 +20,8 @@ export const en = {
   add_first_property: 'Add your first property',
   add_first_tenant: 'Add your first tenant',
   record_first_payment: 'Record your first payment',
+  manage_your_properties: 'Manage Your Properties',
+  quick_actions: 'Quick Actions',
   
   // Properties
   property: 'Property',

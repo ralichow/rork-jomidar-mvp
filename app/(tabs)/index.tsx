@@ -1,14 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Building2, CreditCard, HomeIcon, Plus, Users, AlertCircle } from 'lucide-react-native';
+import { Building2, CreditCard, HomeIcon, Plus, Users, AlertCircle, FileText } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
 import StatCard from '@/components/UI/StatCard';
-import PropertyCard from '@/components/UI/PropertyCard';
-import TenantCard from '@/components/UI/TenantCard';
-import PaymentCard from '@/components/UI/PaymentCard';
+import DashboardCard from '@/components/UI/DashboardCard';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -16,17 +14,11 @@ export default function DashboardScreen() {
     properties, 
     tenants, 
     payments, 
+    documents,
     dashboardStats 
   } = useAppStore();
   
   const { t } = useTranslation();
-  
-  // Get recent data for dashboard
-  const recentProperties = properties.slice(0, 2);
-  const recentTenants = tenants.slice(0, 2);
-  const recentPayments = payments
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 3);
   
   // Calculate pending/overdue payments
   const pendingPayments = payments.filter(p => p.status === 'pending');
@@ -44,6 +36,7 @@ export default function DashboardScreen() {
         style={styles.scrollContainer} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        stickyHeaderIndices={[0]}
       >
         <View style={styles.statsContainer}>
           <StatCard
@@ -109,72 +102,85 @@ export default function DashboardScreen() {
         )}
         
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('properties')}</Text>
-            <TouchableOpacity onPress={() => router.push('/properties')}>
-              <Text style={styles.seeAllText}>{t('see_all')}</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.sectionTitle}>{t('manage_your_properties')}</Text>
           
-          {recentProperties.length > 0 ? (
-            recentProperties.map(property => (
-              <PropertyCard key={property.id} property={property} />
-            ))
-          ) : (
+          <DashboardCard
+            title={t('properties')}
+            count={properties.length}
+            icon={<Building2 size={24} color={colors.primary} />}
+            onPress={() => router.push('/properties')}
+            color={colors.primary}
+          />
+          
+          <DashboardCard
+            title={t('tenants')}
+            count={tenants.length}
+            icon={<Users size={24} color={colors.secondary} />}
+            onPress={() => router.push('/tenants')}
+            color={colors.secondary}
+          />
+          
+          <DashboardCard
+            title={t('payments')}
+            count={payments.length}
+            icon={<CreditCard size={24} color={colors.success} />}
+            onPress={() => router.push('/payments')}
+            color={colors.success}
+          />
+          
+          <DashboardCard
+            title={t('documents')}
+            count={documents.length}
+            icon={<FileText size={24} color={colors.accent} />}
+            onPress={() => router.push('/documents')}
+            color={colors.accent}
+          />
+        </View>
+        
+        <View style={styles.quickActionsContainer}>
+          <Text style={styles.sectionTitle}>{t('quick_actions')}</Text>
+          
+          <View style={styles.quickActions}>
             <TouchableOpacity 
-              style={styles.emptyState}
+              style={styles.quickAction}
               onPress={() => router.push('/property/add')}
             >
-              <Plus size={24} color={colors.primary} />
-              <Text style={styles.emptyStateText}>{t('add_first_property')}</Text>
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.primary}15` }]}>
+                <Building2 size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.quickActionText}>{t('add_property')}</Text>
             </TouchableOpacity>
-          )}
-        </View>
-        
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('recent_tenants')}</Text>
-            <TouchableOpacity onPress={() => router.push('/tenants')}>
-              <Text style={styles.seeAllText}>{t('see_all')}</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {recentTenants.length > 0 ? (
-            recentTenants.map(tenant => (
-              <TenantCard key={tenant.id} tenant={tenant} />
-            ))
-          ) : (
+            
             <TouchableOpacity 
-              style={styles.emptyState}
+              style={styles.quickAction}
               onPress={() => router.push('/tenant/add')}
             >
-              <Plus size={24} color={colors.primary} />
-              <Text style={styles.emptyStateText}>{t('add_first_tenant')}</Text>
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.secondary}15` }]}>
+                <Users size={24} color={colors.secondary} />
+              </View>
+              <Text style={styles.quickActionText}>{t('add_tenant')}</Text>
             </TouchableOpacity>
-          )}
-        </View>
-        
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('recent_payments')}</Text>
-            <TouchableOpacity onPress={() => router.push('/payments')}>
-              <Text style={styles.seeAllText}>{t('see_all')}</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {recentPayments.length > 0 ? (
-            recentPayments.map(payment => (
-              <PaymentCard key={payment.id} payment={payment} />
-            ))
-          ) : (
+            
             <TouchableOpacity 
-              style={styles.emptyState}
+              style={styles.quickAction}
               onPress={() => router.push('/payment/add')}
             >
-              <Plus size={24} color={colors.primary} />
-              <Text style={styles.emptyStateText}>{t('record_first_payment')}</Text>
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.success}15` }]}>
+                <CreditCard size={24} color={colors.success} />
+              </View>
+              <Text style={styles.quickActionText}>{t('record_payment')}</Text>
             </TouchableOpacity>
-          )}
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => router.push('/document/add')}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.accent}15` }]}>
+                <FileText size={24} color={colors.accent} />
+              </View>
+              <Text style={styles.quickActionText}>{t('add_document')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -194,6 +200,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     zIndex: 10,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   appName: {
     fontSize: 32,
@@ -202,6 +212,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+    marginTop: 60, // Space for fixed header
   },
   scrollContent: {
     paddingTop: 16,
@@ -249,36 +260,41 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 16,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text.primary,
+    marginBottom: 12,
   },
-  seeAllText: {
-    fontSize: 14,
-    color: colors.primary,
-    fontWeight: '600',
+  quickActionsContainer: {
+    paddingHorizontal: 16,
   },
-  emptyState: {
+  quickActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  quickAction: {
     backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 24,
+    padding: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
+    width: '48%',
+    marginBottom: 12,
   },
-  emptyStateText: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    marginTop: 12,
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  quickActionText: {
+    fontSize: 14,
+    color: colors.text.primary,
     fontWeight: '500',
+    textAlign: 'center',
   },
 });
