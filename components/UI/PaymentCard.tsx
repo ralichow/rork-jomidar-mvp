@@ -82,7 +82,7 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
       
       <View style={[styles.amountContainer, { borderBottomColor: colors.border }]}>
         <View style={styles.amountRow}>
-          <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>{t('amount_paid')}</Text>
+          <Text style={[styles.amountLabel, { color: colors.text.secondary }]}>{t('amount')}</Text>
           <Text style={[styles.amount, { color: colors.text.primary }]}>৳{payment.amount.toLocaleString()}</Text>
         </View>
         
@@ -112,14 +112,14 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
         <View style={styles.infoItem}>
           <Calendar size={16} color={colors.primary} />
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            {t('for_month')}: {new Date(payment.forMonth).toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+            {t('payment_month')}: {new Date(payment.month + "-01").toLocaleDateString('default', { month: 'long', year: 'numeric' })}
           </Text>
         </View>
         
         <View style={styles.infoItem}>
           <CreditCard size={16} color={colors.primary} />
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            {t('payment_method')}: {payment.method}
+            {t('payment_type')}: {t(payment.type)}
           </Text>
         </View>
       </View>

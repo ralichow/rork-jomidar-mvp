@@ -1,161 +1,141 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useColorScheme } from 'react-native';
-import { Globe, Moon, Sun, Info, DollarSign } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Globe, Moon, Sun, Info } from 'lucide-react-native';
 import { useTranslation } from '@/store/languageStore';
-import { useTheme } from '@/store/themeStore';
+import { useTheme, useThemeStore, ThemeType } from '@/store/themeStore';
 import { getColors } from '@/constants/colors';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { t, language, setLanguage } = useTranslation();
-  const { theme, setTheme, isDark } = useTheme();
-  const systemColorScheme = useColorScheme();
+  const { theme, isDark, setTheme } = useTheme();
   const colors = getColors(isDark);
+  
+  const handleThemeChange = (newTheme: ThemeType) => {
+    setTheme(newTheme);
+  };
+  
+  const handleLanguageChange = (lang: 'en' | 'bn') => {
+    setLanguage(lang);
+  };
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('language')}</Text>
-        <View style={styles.optionContainer}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              { 
-                backgroundColor: colors.background,
-                borderColor: language === 'en' ? colors.primary : colors.border
-              },
-              language === 'en' && { backgroundColor: `${colors.primary}20` }
-            ]}
-            onPress={() => setLanguage('en')}
-          >
-            <Globe size={20} color={language === 'en' ? colors.primary : colors.text.secondary} />
-            <Text style={[
-              styles.optionText,
-              { color: colors.text.secondary },
-              language === 'en' && { color: colors.primary, fontWeight: '600' }
-            ]}>
-              {t('english')}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              { 
-                backgroundColor: colors.background,
-                borderColor: language === 'bn' ? colors.primary : colors.border
-              },
-              language === 'bn' && { backgroundColor: `${colors.primary}20` }
-            ]}
-            onPress={() => setLanguage('bn')}
-          >
-            <Globe size={20} color={language === 'bn' ? colors.primary : colors.text.secondary} />
-            <Text style={[
-              styles.optionText,
-              { color: colors.text.secondary },
-              language === 'bn' && { color: colors.primary, fontWeight: '600' }
-            ]}>
-              {t('bangla')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('app_settings')}</Text>
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
+          {t('app_settings')}
+        </Text>
         
-        <View style={styles.settingItem}>
-          <View style={[styles.settingIconContainer, { backgroundColor: colors.background }]}>
-            {theme === 'dark' ? (
-              <Moon size={20} color={colors.text.secondary} />
-            ) : (
-              <Sun size={20} color={colors.text.secondary} />
-            )}
-          </View>
-          <View style={styles.settingContent}>
-            <Text style={[styles.settingTitle, { color: colors.text.primary }]}>{t('theme')}</Text>
-            <View style={styles.settingOptions}>
-              <TouchableOpacity 
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabelContainer}>
+              <Globe size={20} color={colors.primary} />
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>
+                {t('language')}
+              </Text>
+            </View>
+            
+            <View style={styles.languageOptions}>
+              <TouchableOpacity
                 style={[
-                  styles.settingOption, 
-                  { 
-                    backgroundColor: colors.background,
-                    borderColor: theme === 'light' ? colors.primary : colors.border
-                  },
+                  styles.languageOption,
+                  language === 'en' && { backgroundColor: `${colors.primary}20` }
+                ]}
+                onPress={() => handleLanguageChange('en')}
+              >
+                <Text
+                  style={[
+                    styles.languageText,
+                    { color: language === 'en' ? colors.primary : colors.text.secondary }
+                  ]}
+                >
+                  {t('english')}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.languageOption,
+                  language === 'bn' && { backgroundColor: `${colors.primary}20` }
+                ]}
+                onPress={() => handleLanguageChange('bn')}
+              >
+                <Text
+                  style={[
+                    styles.languageText,
+                    { color: language === 'bn' ? colors.primary : colors.text.secondary }
+                  ]}
+                >
+                  {t('bangla')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabelContainer}>
+              {isDark ? (
+                <Moon size={20} color={colors.primary} />
+              ) : (
+                <Sun size={20} color={colors.primary} />
+              )}
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>
+                {t('theme')}
+              </Text>
+            </View>
+            
+            <View style={styles.themeOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.themeOption,
                   theme === 'light' && { backgroundColor: `${colors.primary}20` }
                 ]}
-                onPress={() => setTheme('light')}
+                onPress={() => handleThemeChange('light')}
               >
-                <Text style={[
-                  styles.settingOptionText, 
-                  { color: colors.text.secondary },
-                  theme === 'light' && { color: colors.primary, fontWeight: '600' }
-                ]}>
+                <Text
+                  style={[
+                    styles.themeText,
+                    { color: theme === 'light' ? colors.primary : colors.text.secondary }
+                  ]}
+                >
                   {t('light')}
                 </Text>
               </TouchableOpacity>
               
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
-                  styles.settingOption, 
-                  { 
-                    backgroundColor: colors.background,
-                    borderColor: theme === 'dark' ? colors.primary : colors.border
-                  },
+                  styles.themeOption,
                   theme === 'dark' && { backgroundColor: `${colors.primary}20` }
                 ]}
-                onPress={() => setTheme('dark')}
+                onPress={() => handleThemeChange('dark')}
               >
-                <Text style={[
-                  styles.settingOptionText, 
-                  { color: colors.text.secondary },
-                  theme === 'dark' && { color: colors.primary, fontWeight: '600' }
-                ]}>
+                <Text
+                  style={[
+                    styles.themeText,
+                    { color: theme === 'dark' ? colors.primary : colors.text.secondary }
+                  ]}
+                >
                   {t('dark')}
                 </Text>
               </TouchableOpacity>
               
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
-                  styles.settingOption, 
-                  { 
-                    backgroundColor: colors.background,
-                    borderColor: theme === 'system' ? colors.primary : colors.border
-                  },
+                  styles.themeOption,
                   theme === 'system' && { backgroundColor: `${colors.primary}20` }
                 ]}
-                onPress={() => setTheme('system')}
+                onPress={() => handleThemeChange('system')}
               >
-                <Text style={[
-                  styles.settingOptionText, 
-                  { color: colors.text.secondary },
-                  theme === 'system' && { color: colors.primary, fontWeight: '600' }
-                ]}>
-                  {t('system')} {theme === 'system' && `(${systemColorScheme})`}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-        
-        <View style={styles.settingItem}>
-          <View style={[styles.settingIconContainer, { backgroundColor: colors.background }]}>
-            <DollarSign size={20} color={colors.text.secondary} />
-          </View>
-          <View style={styles.settingContent}>
-            <Text style={[styles.settingTitle, { color: colors.text.primary }]}>{t('currency')}</Text>
-            <View style={styles.settingOptions}>
-              <TouchableOpacity style={[
-                styles.settingOption, 
-                { 
-                  backgroundColor: `${colors.primary}20`,
-                  borderColor: colors.primary
-                }
-              ]}>
-                <Text style={[
-                  styles.settingOptionText, 
-                  { color: colors.primary, fontWeight: '600' }
-                ]}>
-                  ৳ BDT
+                <Text
+                  style={[
+                    styles.themeText,
+                    { color: theme === 'system' ? colors.primary : colors.text.secondary }
+                  ]}
+                >
+                  {t('system')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -163,17 +143,22 @@ export default function SettingsScreen() {
         </View>
       </View>
       
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('about')}</Text>
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
+          {t('about')}
+        </Text>
         
-        <View style={styles.aboutContainer}>
-          <Text style={[styles.appName, { color: colors.text.primary }]}>{t('app_name')}</Text>
-          <Text style={[styles.appSubtitle, { color: colors.text.secondary }]}>{t('app_subtitle')}</Text>
-          <Text style={[styles.versionText, { color: colors.text.tertiary }]}>{t('version')}: 1.0.0</Text>
-          
-          <View style={styles.aboutContent}>
-            <Text style={[styles.aboutText, { color: colors.text.secondary }]}>
-              Jomidar is a comprehensive property management app designed for landlords in Bangladesh to manage their properties, tenants, payments, and documents efficiently.
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabelContainer}>
+              <Info size={20} color={colors.primary} />
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>
+                {t('version')}
+              </Text>
+            </View>
+            
+            <Text style={[styles.versionText, { color: colors.text.secondary }]}>
+              1.0.0
             </Text>
           </View>
         </View>
@@ -185,93 +170,64 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
   section: {
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderWidth: 1,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+  },
+  settingItem: {
+    paddingVertical: 12,
+  },
+  settingLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  optionContainer: {
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 12,
+  },
+  divider: {
+    height: 1,
+    width: '100%',
+  },
+  languageOptions: {
     flexDirection: 'row',
     gap: 12,
   },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
+  languageOption: {
     paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  optionText: {
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  settingIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  settingContent: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  settingOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  settingOption: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  settingOptionText: {
+  languageText: {
     fontSize: 14,
+    fontWeight: '500',
   },
-  aboutContainer: {
-    alignItems: 'center',
-    paddingVertical: 16,
+  themeOptions: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  appName: {
-    fontSize: 24,
-    fontWeight: '700',
+  themeOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  appSubtitle: {
-    fontSize: 16,
-    marginTop: 4,
+  themeText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   versionText: {
     fontSize: 14,
-    marginTop: 8,
-  },
-  aboutContent: {
-    marginTop: 16,
-    paddingHorizontal: 16,
-  },
-  aboutText: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 });

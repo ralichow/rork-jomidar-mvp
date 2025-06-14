@@ -19,8 +19,9 @@ export default function DocumentCard({ document }: DocumentCardProps) {
   const { isDark } = useTheme();
   const colors = getColors(isDark);
   
-  const tenant = document.tenantId ? tenants.find(t => t.id === document.tenantId) : null;
-  const property = document.propertyId ? properties.find(p => p.id === document.propertyId) : null;
+  // Find related tenant or property based on relatedTo and relatedId
+  const tenant = document.relatedTo === 'tenant' ? tenants.find(t => t.id === document.relatedId) : null;
+  const property = document.relatedTo === 'property' ? properties.find(p => p.id === document.relatedId) : null;
   
   const handlePress = () => {
     router.push(`/document/${document.id}`);
@@ -32,7 +33,7 @@ export default function DocumentCard({ document }: DocumentCardProps) {
         return <FileText size={24} color={colors.primary} />;
       case 'receipt':
         return <FileText size={24} color={colors.success} />;
-      case 'notice':
+      case 'utility':
         return <FileText size={24} color={colors.warning} />;
       case 'maintenance':
         return <FileText size={24} color={colors.accent} />;
@@ -54,7 +55,7 @@ export default function DocumentCard({ document }: DocumentCardProps) {
           {getDocumentTypeIcon()}
         </View>
         <View style={styles.headerInfo}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>{document.title}</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>{document.name}</Text>
           <Text style={[styles.type, { color: colors.text.secondary }]}>
             {document.type.charAt(0).toUpperCase() + document.type.slice(1)}
           </Text>
@@ -65,7 +66,7 @@ export default function DocumentCard({ document }: DocumentCardProps) {
         <View style={styles.infoItem}>
           <Calendar size={16} color={colors.primary} />
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            {new Date(document.date).toLocaleDateString()}
+            {new Date(document.uploadDate).toLocaleDateString()}
           </Text>
         </View>
         

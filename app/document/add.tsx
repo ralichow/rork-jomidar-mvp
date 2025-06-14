@@ -1,453 +1,302 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, Camera, FileText, Image as ImageIcon, X } from 'lucide-react-native';
+import { Picker } from '@react-native-picker/picker';
+import { Camera, CameraType } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import colors from '@/constants/colors';
+import { v4 as uuidv4 } from 'uuid';
 import { useAppStore } from '@/store/appStore';
-import Button from '@/components/UI/Button';
+import { useTranslation } from '@/store/languageStore';
+import { useTheme } from '@/store/themeStore';
+import { getColors } from '@/constants/colors';
 import { Document, DocumentSource } from '@/types';
+import Button from '@/components/UI/Button';
+import { Camera as CameraIcon, Image as ImageIcon, Upload } from 'lucide-react-native';
 
 export default function AddDocumentScreen() {
   const router = useRouter();
-  const { properties, tenants, addDocument } = useAppStore();
+  const { addDocument, properties, tenants } = useAppStore();
+  const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   
   const [name, setName] = useState('');
-  const [type, setType] = useState<Document['type']>('lease');
-  const [documentSource, setDocumentSource] = useState<DocumentSource | null>(null);
-  const [relatedTo, setRelatedTo] = useState<Document['relatedTo']>('property');
+  const [type, setType] = useState<'lease' | 'receipt' | 'utility' | 'maintenance' | 'other'>('lease');
+  const [relatedTo, setRelatedTo] = useState<'property' | 'tenant'>('property');
   const [relatedId, setRelatedId] = useState('');
+  const [documentSource, setDocumentSource] = useState<DocumentSource | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraPermission, requestCameraPermission] = Camera.useCameraPermissions();
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Get related entities based on selection
-  const getRelatedEntities = () => {
-    switch (relatedTo) {
-      case 'property':
-        return properties;
-      case 'tenant':
-        return tenants;
-      case 'unit':
-        // Flatten all units from all properties
-        return properties.flatMap(property => 
-          property.units.map(unit => ({
-            id: unit.id,
-            name: `${property.name}, Unit ${unit.unitNumber}`
-          }))
-        );
-      default:
-        return [];
-    }
-  };
-  
-  const relatedEntities = getRelatedEntities();
-  
-  const pickImage = async (useCamera = false) => {
-    try {
-      let result;
-      
-      if (useCamera) {
-        // Request camera permissions
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Required', 'Camera permission is required to take photos');
-          return;
-        }
-        
-        result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          quality: 0.8,
-        });
-      } else {
-        // Request media library permissions
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Required', 'Media library permission is required to select photos');
-          return;
-        }
-        
-        result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          quality: 0.8,
-        });
-      }
-      
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        setDocumentSource({
-          type: 'image',
-          uri: asset.uri,
-          name: asset.fileName || `image_${Date.now()}.jpg`,
-          mimeType: asset.mimeType || 'image/jpeg',
-          size: asset.fileSize
-        });
-        
-        // Auto-set name if not already set
-        if (!name) {
-          setName(asset.fileName || `Document ${new Date().toLocaleDateString()}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-  
-  const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-        copyToCacheDirectory: true
-      });
-      
-      if (result.canceled === false && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        setDocumentSource({
-          type: 'document',
-          uri: asset.uri,
-          name: asset.name,
-          mimeType: asset.mimeType,
-          size: asset.size
-        });
-        
-        // Auto-set name if not already set
-        if (!name) {
-          setName(asset.name);
-        }
-      }
-    } catch (error) {
-      console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document');
-    }
-  };
-  
-  const clearDocumentSource = () => {
-    setDocumentSource(null);
-  };
-  
-  const handleSubmit = () => {
-    // Validate required fields
-    if (!name.trim()) {
-      Alert.alert('Error', 'Please enter document name');
-      return;
-    }
-    
-    if (!documentSource) {
-      Alert.alert('Error', 'Please select a document or image');
+  const handleAddDocument = () => {
+    if (!name) {
+      Alert.alert('Error', 'Please enter a document name');
       return;
     }
     
     if (!relatedId) {
-      Alert.alert('Error', `Please select a ${relatedTo}`);
+      Alert.alert('Error', 'Please select a related property or tenant');
       return;
     }
     
-    setIsSubmitting(true);
+    if (!documentSource) {
+      Alert.alert('Error', 'Please upload or capture a document');
+      return;
+    }
     
-    try {
-      addDocument({
-        name,
-        type,
-        source: documentSource,
-        uploadDate: new Date().toISOString(),
-        relatedTo,
-        relatedId
+    const newDocument: Document = {
+      id: uuidv4(),
+      name,
+      type,
+      source: documentSource,
+      uploadDate: new Date().toISOString(),
+      relatedTo,
+      relatedId,
+    };
+    
+    addDocument(newDocument);
+    router.back();
+  };
+  
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setDocumentSource({
+        type: asset.type === 'image' ? 'image' : 'document',
+        uri: asset.uri,
+        name: asset.fileName || 'document',
+        mimeType: asset.mimeType,
+        size: asset.fileSize,
       });
-      
-      router.replace('/documents');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add document');
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+      setShowCamera(false);
     }
   };
   
+  const takePicture = async () => {
+    if (!cameraPermission?.granted) {
+      const permission = await requestCameraPermission();
+      if (!permission.granted) {
+        Alert.alert('Permission required', 'Camera permission is required to take pictures');
+        return;
+      }
+    }
+    
+    setShowCamera(true);
+  };
+  
+  const handleCameraCapture = async (camera: any) => {
+    if (camera) {
+      const photo = await camera.takePictureAsync({
+        quality: 0.8,
+      });
+      
+      setDocumentSource({
+        type: 'image',
+        uri: photo.uri,
+        name: `photo_${new Date().getTime()}.jpg`,
+        mimeType: 'image/jpeg',
+      });
+      
+      setShowCamera(false);
+    }
+  };
+  
+  if (showCamera) {
+    return (
+      <View style={styles.container}>
+        <Camera
+          style={styles.camera}
+          type={CameraType.back}
+          ref={(ref) => {
+            if (ref) {
+              (ref as any)._camera = ref;
+            }
+          }}
+        >
+          <View style={styles.cameraControls}>
+            <TouchableOpacity 
+              style={[styles.cameraButton, { backgroundColor: colors.card }]} 
+              onPress={() => setShowCamera(false)}
+            >
+              <Text style={{ color: colors.text.primary }}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.cameraButton, { backgroundColor: colors.primary }]} 
+              onPress={() => handleCameraCapture((Camera as any)._camera)}
+            >
+              <Text style={{ color: '#fff' }}>Capture</Text>
+            </TouchableOpacity>
+          </View>
+        </Camera>
+      </View>
+    );
+  }
+  
   return (
     <ScrollView 
-      style={styles.container} 
+      style={[styles.container, { backgroundColor: colors.background }]} 
       contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.formContainer}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Document Name</Text>
-          <View style={styles.inputContainer}>
-            <FileText size={20} color={colors.text.tertiary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter document name"
-              value={name}
-              onChangeText={setName}
-              placeholderTextColor={colors.text.tertiary}
-            />
-            {name ? (
-              <TouchableOpacity onPress={() => setName('')}>
-                <X size={18} color={colors.text.tertiary} />
-              </TouchableOpacity>
-            ) : null}
-          </View>
-        </View>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Document Type</Text>
-          <View style={styles.typeSelector}>
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                type === 'lease' && styles.selectedTypeOption
-              ]}
-              onPress={() => setType('lease')}
-            >
-              <Text style={[
-                styles.typeOptionText,
-                type === 'lease' && styles.selectedTypeOptionText
-              ]}>
-                Lease
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                type === 'receipt' && styles.selectedTypeOption
-              ]}
-              onPress={() => setType('receipt')}
-            >
-              <Text style={[
-                styles.typeOptionText,
-                type === 'receipt' && styles.selectedTypeOptionText
-              ]}>
-                Receipt
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                type === 'utility' && styles.selectedTypeOption
-              ]}
-              onPress={() => setType('utility')}
-            >
-              <Text style={[
-                styles.typeOptionText,
-                type === 'utility' && styles.selectedTypeOptionText
-              ]}>
-                Utility
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                type === 'maintenance' && styles.selectedTypeOption
-              ]}
-              onPress={() => setType('maintenance')}
-            >
-              <Text style={[
-                styles.typeOptionText,
-                type === 'maintenance' && styles.selectedTypeOptionText
-              ]}>
-                Maintenance
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                type === 'other' && styles.selectedTypeOption
-              ]}
-              onPress={() => setType('other')}
-            >
-              <Text style={[
-                styles.typeOptionText,
-                type === 'other' && styles.selectedTypeOptionText
-              ]}>
-                Other
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Document Source</Text>
-          
-          {!documentSource ? (
-            <View style={styles.uploadOptions}>
-              <TouchableOpacity 
-                style={styles.uploadOption} 
-                onPress={() => pickImage(false)}
-              >
-                <View style={styles.uploadIconContainer}>
-                  <ImageIcon size={24} color={colors.primary} />
-                </View>
-                <Text style={styles.uploadOptionText}>Photo Library</Text>
-              </TouchableOpacity>
-              
-              {Platform.OS !== 'web' && (
-                <TouchableOpacity 
-                  style={styles.uploadOption} 
-                  onPress={() => pickImage(true)}
-                >
-                  <View style={styles.uploadIconContainer}>
-                    <Camera size={24} color={colors.primary} />
-                  </View>
-                  <Text style={styles.uploadOptionText}>Take Photo</Text>
-                </TouchableOpacity>
-              )}
-              
-              <TouchableOpacity 
-                style={styles.uploadOption} 
-                onPress={pickDocument}
-              >
-                <View style={styles.uploadIconContainer}>
-                  <FileText size={24} color={colors.primary} />
-                </View>
-                <Text style={styles.uploadOptionText}>Document</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.selectedDocumentContainer}>
-              {documentSource.type === 'image' && (
-                <Image 
-                  source={{ uri: documentSource.uri }} 
-                  style={styles.previewImage} 
-                  resizeMode="cover"
-                />
-              )}
-              
-              {documentSource.type === 'document' && (
-                <View style={styles.documentPreview}>
-                  <FileText size={32} color={colors.primary} />
-                  <Text style={styles.documentName} numberOfLines={1} ellipsizeMode="middle">
-                    {documentSource.name}
-                  </Text>
-                </View>
-              )}
-              
-              <TouchableOpacity 
-                style={styles.clearButton} 
-                onPress={clearDocumentSource}
-              >
-                <X size={18} color={colors.text.tertiary} />
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Related To</Text>
-          <View style={styles.relatedSelector}>
-            <TouchableOpacity
-              style={[
-                styles.relatedOption,
-                relatedTo === 'property' && styles.selectedRelatedOption
-              ]}
-              onPress={() => {
-                setRelatedTo('property');
-                setRelatedId('');
-              }}
-            >
-              <Text style={[
-                styles.relatedOptionText,
-                relatedTo === 'property' && styles.selectedRelatedOptionText
-              ]}>
-                Property
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.relatedOption,
-                relatedTo === 'tenant' && styles.selectedRelatedOption
-              ]}
-              onPress={() => {
-                setRelatedTo('tenant');
-                setRelatedId('');
-              }}
-            >
-              <Text style={[
-                styles.relatedOptionText,
-                relatedTo === 'tenant' && styles.selectedRelatedOptionText
-              ]}>
-                Tenant
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.relatedOption,
-                relatedTo === 'unit' && styles.selectedRelatedOption
-              ]}
-              onPress={() => {
-                setRelatedTo('unit');
-                setRelatedId('');
-              }}
-            >
-              <Text style={[
-                styles.relatedOptionText,
-                relatedTo === 'unit' && styles.selectedRelatedOptionText
-              ]}>
-                Unit
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>
-            Select {relatedTo.charAt(0).toUpperCase() + relatedTo.slice(1)}
-          </Text>
-          <ScrollView 
-            style={styles.entitySelector}
-            horizontal
-            showsHorizontalScrollIndicator={false}
+      <View style={styles.formGroup}>
+        <Text style={[styles.label, { color: colors.text.primary }]}>{t('document_name')}</Text>
+        <TextInput
+          style={[styles.input, { 
+            backgroundColor: colors.card, 
+            color: colors.text.primary,
+            borderColor: colors.border
+          }]}
+          value={name}
+          onChangeText={setName}
+          placeholder={t('document_name')}
+          placeholderTextColor={colors.text.tertiary}
+        />
+      </View>
+      
+      <View style={styles.formGroup}>
+        <Text style={[styles.label, { color: colors.text.primary }]}>{t('document_type')}</Text>
+        <View style={[styles.pickerContainer, { 
+          backgroundColor: colors.card,
+          borderColor: colors.border
+        }]}>
+          <Picker
+            selectedValue={type}
+            onValueChange={(itemValue) => setType(itemValue as any)}
+            style={[styles.picker, { color: colors.text.primary }]}
+            dropdownIconColor={colors.text.primary}
           >
-            {relatedEntities.length > 0 ? (
-              relatedEntities.map((entity: any) => (
-                <TouchableOpacity
-                  key={entity.id}
-                  style={[
-                    styles.entityOption,
-                    relatedId === entity.id && styles.selectedEntityOption
-                  ]}
-                  onPress={() => setRelatedId(entity.id)}
-                >
-                  <Text style={[
-                    styles.entityOptionText,
-                    relatedId === entity.id && styles.selectedEntityOptionText
-                  ]}>
-                    {entity.name}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.noEntitiesMessage}>
-                <Text style={styles.noEntitiesText}>
-                  No {relatedTo}s available
-                </Text>
-              </View>
-            )}
-          </ScrollView>
+            <Picker.Item label={t('lease')} value="lease" />
+            <Picker.Item label={t('receipt')} value="receipt" />
+            <Picker.Item label={t('utility_doc')} value="utility" />
+            <Picker.Item label={t('maintenance_doc')} value="maintenance" />
+            <Picker.Item label={t('other')} value="other" />
+          </Picker>
         </View>
       </View>
       
+      <View style={styles.formGroup}>
+        <Text style={[styles.label, { color: colors.text.primary }]}>{t('related_to')}</Text>
+        <View style={styles.radioGroup}>
+          <TouchableOpacity 
+            style={styles.radioOption} 
+            onPress={() => setRelatedTo('property')}
+          >
+            <View style={[styles.radioButton, { 
+              borderColor: colors.primary,
+              backgroundColor: relatedTo === 'property' ? colors.primary : 'transparent'
+            }]} />
+            <Text style={[styles.radioLabel, { color: colors.text.primary }]}>{t('property')}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.radioOption} 
+            onPress={() => setRelatedTo('tenant')}
+          >
+            <View style={[styles.radioButton, { 
+              borderColor: colors.primary,
+              backgroundColor: relatedTo === 'tenant' ? colors.primary : 'transparent'
+            }]} />
+            <Text style={[styles.radioLabel, { color: colors.text.primary }]}>{t('tenant')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      {relatedTo === 'property' && (
+        <View style={styles.formGroup}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>{t('select_property')}</Text>
+          <View style={[styles.pickerContainer, { 
+            backgroundColor: colors.card,
+            borderColor: colors.border
+          }]}>
+            <Picker
+              selectedValue={relatedId}
+              onValueChange={(itemValue) => setRelatedId(itemValue)}
+              style={[styles.picker, { color: colors.text.primary }]}
+              dropdownIconColor={colors.text.primary}
+            >
+              <Picker.Item label={t('select_property')} value="" />
+              {properties.map((property) => (
+                <Picker.Item key={property.id} label={property.name} value={property.id} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+      )}
+      
+      {relatedTo === 'tenant' && (
+        <View style={styles.formGroup}>
+          <Text style={[styles.label, { color: colors.text.primary }]}>{t('select_tenant')}</Text>
+          <View style={[styles.pickerContainer, { 
+            backgroundColor: colors.card,
+            borderColor: colors.border
+          }]}>
+            <Picker
+              selectedValue={relatedId}
+              onValueChange={(itemValue) => setRelatedId(itemValue)}
+              style={[styles.picker, { color: colors.text.primary }]}
+              dropdownIconColor={colors.text.primary}
+            >
+              <Picker.Item label={t('select_tenant')} value="" />
+              {tenants.map((tenant) => (
+                <Picker.Item key={tenant.id} label={tenant.name} value={tenant.id} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+      )}
+      
+      <View style={styles.formGroup}>
+        <Text style={[styles.label, { color: colors.text.primary }]}>Document</Text>
+        
+        <View style={styles.documentActions}>
+          <TouchableOpacity 
+            style={[styles.documentButton, { backgroundColor: colors.primary }]} 
+            onPress={pickImage}
+          >
+            <ImageIcon size={20} color="#fff" />
+            <Text style={styles.documentButtonText}>Choose from Gallery</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.documentButton, { backgroundColor: colors.primary }]} 
+            onPress={takePicture}
+          >
+            <CameraIcon size={20} color="#fff" />
+            <Text style={styles.documentButtonText}>Take Photo</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {documentSource && (
+          <View style={[styles.documentPreview, { backgroundColor: colors.card }]}>
+            <Text style={[styles.documentName, { color: colors.text.primary }]}>
+              {documentSource.name || 'Document'}
+            </Text>
+            <TouchableOpacity 
+              style={styles.removeButton}
+              onPress={() => setDocumentSource(null)}
+            >
+              <Text style={{ color: colors.error }}>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+      
       <View style={styles.buttonContainer}>
-        <Button
-          title="Cancel"
-          onPress={() => router.back()}
-          variant="outline"
-          style={{ flex: 1, marginRight: 8 }}
-        />
-        <Button
-          title="Add Document"
-          onPress={handleSubmit}
+        <Button 
+          title={t('add')}
+          onPress={handleAddDocument}
           variant="primary"
-          loading={isSubmitting}
-          style={{ flex: 2 }}
+        />
+        <Button 
+          title={t('cancel')}
+          onPress={() => router.back()}
+          variant="secondary"
         />
       </View>
     </ScrollView>
@@ -457,206 +306,100 @@ export default function AddDocumentScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   contentContainer: {
     padding: 16,
   },
-  formContainer: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  inputGroup: {
+  formGroup: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.text.primary,
     marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 48,
-  },
-  inputIcon: {
-    marginRight: 8,
   },
   input: {
-    flex: 1,
-    height: '100%',
-    color: colors.text.primary,
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
     fontSize: 16,
   },
-  typeSelector: {
+  pickerContainer: {
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 48,
+    width: '100%',
+  },
+  radioGroup: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    gap: 16,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    marginRight: 8,
+  },
+  radioLabel: {
+    fontSize: 16,
+  },
+  documentActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  documentButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
     gap: 8,
   },
-  typeOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
-    minWidth: '30%',
-    alignItems: 'center',
-  },
-  selectedTypeOption: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  typeOptionText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    fontWeight: '500',
-  },
-  selectedTypeOptionText: {
-    color: colors.primary,
+  documentButtonText: {
+    color: '#fff',
     fontWeight: '600',
-  },
-  uploadOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-  },
-  uploadOption: {
-    alignItems: 'center',
-    width: '45%',
-    marginBottom: 12,
-  },
-  uploadIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    backgroundColor: `${colors.primary}10`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: `${colors.primary}30`,
-    borderStyle: 'dashed',
-  },
-  uploadOptionText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    fontWeight: '500',
-  },
-  selectedDocumentContainer: {
-    position: 'relative',
-    marginBottom: 8,
-  },
-  previewImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 8,
   },
   documentPreview: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.background,
+    justifyContent: 'space-between',
+    padding: 12,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   documentName: {
-    fontSize: 14,
-    color: colors.text.primary,
-    fontWeight: '500',
-    marginLeft: 12,
-    flex: 1,
+    fontSize: 16,
   },
-  clearButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  relatedSelector: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  relatedOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flex: 1,
-    alignItems: 'center',
-  },
-  selectedRelatedOption: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  relatedOptionText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    fontWeight: '500',
-  },
-  selectedRelatedOptionText: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  entitySelector: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  entityOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  selectedEntityOption: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  entityOptionText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    fontWeight: '500',
-  },
-  selectedEntityOptionText: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  noEntitiesMessage: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-  },
-  noEntitiesText: {
-    fontSize: 14,
-    color: colors.text.tertiary,
+  removeButton: {
+    padding: 8,
   },
   buttonContainer: {
+    marginTop: 24,
+    gap: 12,
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraControls: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    marginBottom: 24,
+    justifyContent: 'space-around',
+  },
+  cameraButton: {
+    padding: 12,
+    borderRadius: 8,
   },
 });
