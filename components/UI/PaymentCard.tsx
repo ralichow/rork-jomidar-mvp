@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, CreditCard, Receipt, HomeIcon } from 'lucide-react-native';
+import { Calendar, CreditCard, Download, HomeIcon, Receipt } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { Payment } from '@/types';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
+import { generateAndSharePaymentReceipt } from '@/utils/reportUtils';
 
 type PaymentCardProps = {
   payment: Payment;
@@ -23,6 +24,16 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
   
   const handlePress = () => {
     router.push(`/payment/${payment.id}`);
+  };
+  
+  const handleDownloadReceipt = async (e: any) => {
+    e.stopPropagation(); // Prevent navigation to payment details
+    
+    try {
+      await generateAndSharePaymentReceipt(payment, tenant, property, unit);
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate receipt. Please try again.");
+    }
   };
   
   const getStatusColor = (status: Payment['status']) => {
@@ -149,9 +160,20 @@ export default function PaymentCard({ payment }: PaymentCardProps) {
       
       <View style={styles.footer}>
         <Text style={styles.tenantName}>{tenant?.name}</Text>
-        <Text style={styles.propertyInfo}>
-          {property?.name}, {t('unit')} {unit?.unitNumber}
-        </Text>
+        <View style={styles.footerRight}>
+          <Text style={styles.propertyInfo}>
+            {property?.name}, {t('unit')} {unit?.unitNumber}
+          </Text>
+          
+          {payment.status === 'paid' && (
+            <TouchableOpacity 
+              style={styles.downloadButton}
+              onPress={handleDownloadReceipt}
+            >
+              <Download size={16} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -231,15 +253,30 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   tenantName: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text.primary,
-    marginBottom: 4,
+  },
+  footerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   propertyInfo: {
     fontSize: 14,
     color: colors.text.secondary,
+  },
+  downloadButton: {
+    marginLeft: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: `${colors.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

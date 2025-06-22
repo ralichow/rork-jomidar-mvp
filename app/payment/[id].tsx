@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Calendar, CreditCard, Edit2, ExternalLink, Home, Trash2, User } from 'lucide-react-native';
+import { Calendar, CreditCard, Download, Edit2, ExternalLink, Home, Trash2, User } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { generateAndSharePaymentReceipt } from '@/utils/reportUtils';
 
 export default function PaymentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -103,6 +104,14 @@ export default function PaymentDetailScreen() {
           notes: `Remaining payment for ${payment.month}`
         }
       });
+    }
+  };
+  
+  const handleDownloadReceipt = async () => {
+    try {
+      await generateAndSharePaymentReceipt(payment, tenant, property, unit);
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate receipt. Please try again.");
     }
   };
   
@@ -225,6 +234,14 @@ export default function PaymentDetailScreen() {
             </View>
           )}
         </View>
+        
+        <Button
+          title="Download Receipt"
+          onPress={handleDownloadReceipt}
+          variant="outline"
+          icon={<Download size={16} color={colors.primary} />}
+          style={styles.receiptButton}
+        />
         
         {payment.receiptUrl && (
           <Button

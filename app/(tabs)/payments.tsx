@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CreditCard, Filter, Plus, Search } from 'lucide-react-native';
+import { CreditCard, Download, Filter, Plus, Search } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import PaymentCard from '@/components/UI/PaymentCard';
 import Button from '@/components/UI/Button';
+import { generateAndSharePaymentsReport } from '@/utils/reportUtils';
 
 export default function PaymentsScreen() {
   const router = useRouter();
-  const payments = useAppStore((state) => state.payments);
+  const { payments, tenants, properties } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue' | 'underpaid'>('all');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   
   const filteredPayments = payments
     .filter(payment => 
@@ -21,7 +23,7 @@ export default function PaymentsScreen() {
       if (!searchQuery) return true;
       
       // Get tenant name for search
-      const tenant = useAppStore.getState().tenants.find(t => t.id === payment.tenantId);
+      const tenant = tenants.find(t => t.id === payment.tenantId);
       const tenantName = tenant?.name || '';
       
       return (
@@ -34,6 +36,33 @@ export default function PaymentsScreen() {
   
   const handleAddPayment = () => {
     router.push('/payment/add');
+  };
+  
+  const handleGenerateReport = async () => {
+    try {
+      setIsGeneratingReport(true);
+      
+      // Determine which payments to include in the report
+      const paymentsToInclude = statusFilter === 'all' 
+        ? filteredPayments 
+        : payments.filter(p => p.status === statusFilter);
+      
+      // Generate report name based on filter
+      const reportName = statusFilter === 'all' 
+        ? 'all_payments' 
+        : `${statusFilter}_payments`;
+      
+      await generateAndSharePaymentsReport(
+        paymentsToInclude,
+        tenants,
+        properties,
+        reportName
+      );
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate report. Please try again.");
+    } finally {
+      setIsGeneratingReport(false);
+    }
   };
   
   return (
@@ -145,13 +174,28 @@ export default function PaymentsScreen() {
       </View>
       
       {filteredPayments.length > 0 ? (
-        <FlatList
-          data={filteredPayments}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <PaymentCard payment={item} />}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        <>
+          <View style={styles.reportButtonContainer}>
+            <Button
+              title="Download Report"
+              onPress={handleGenerateReport}
+              variant="outline"
+              size="small"
+              icon={<Download size={16} color={colors.primary} />}
+              style={styles.reportButton}
+              loading={isGeneratingReport}
+              disabled={isGeneratingReport}
+            />
+          </View>
+          
+          <FlatList
+            data={filteredPayments}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <PaymentCard payment={item} />}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       ) : (
         <View style={styles.emptyContainer}>
           <CreditCard size={64} color={`${colors.text.tertiary}80`} />
@@ -232,6 +276,13 @@ const styles = StyleSheet.create({
   activeFilterText: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  reportButtonContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  reportButton: {
+    alignSelf: 'flex-end',
   },
   listContent: {
     padding: 16,

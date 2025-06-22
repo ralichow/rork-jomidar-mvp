@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Building2, CreditCard, HomeIcon, Plus, Users, AlertCircle, FileText } from 'lucide-react-native';
+import { Building2, CreditCard, Download, HomeIcon, Plus, Users, AlertCircle, FileText } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import { useTranslation } from '@/store/languageStore';
 import StatCard from '@/components/UI/StatCard';
 import DashboardCard from '@/components/UI/DashboardCard';
+import Button from '@/components/UI/Button';
+import { generateAndSharePaymentsReport } from '@/utils/reportUtils';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -24,6 +26,19 @@ export default function DashboardScreen() {
   const pendingPayments = payments.filter(p => p.status === 'pending');
   const overduePayments = payments.filter(p => p.status === 'overdue');
   const underpaidPayments = payments.filter(p => p.status === 'underpaid');
+  
+  const handleGeneratePaymentsReport = async () => {
+    try {
+      await generateAndSharePaymentsReport(
+        payments,
+        tenants,
+        properties,
+        'all_payments'
+      );
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate report. Please try again.");
+    }
+  };
   
   return (
     <View style={styles.container}>
@@ -118,7 +133,19 @@ export default function DashboardScreen() {
         )}
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('manage_your_properties')}</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('manage_your_properties')}</Text>
+            
+            {payments.length > 0 && (
+              <TouchableOpacity 
+                style={styles.reportButton}
+                onPress={handleGeneratePaymentsReport}
+              >
+                <Download size={16} color={colors.primary} />
+                <Text style={styles.reportButtonText}>Payments Report</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           
           <DashboardCard
             title={t('properties')}
@@ -269,11 +296,31 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 16,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text.primary,
     marginBottom: 12,
+  },
+  reportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${colors.primary}15`,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  reportButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+    marginLeft: 6,
   },
   quickActionsContainer: {
     paddingHorizontal: 16,
