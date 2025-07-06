@@ -58,8 +58,7 @@ export default function PropertyDetailScreen() {
   };
   
   const handleAddUnit = () => {
-    // Navigate to add unit screen (not implemented in this example)
-    Alert.alert("Add Unit", "Add unit functionality would go here");
+    router.push(`/unit/add?propertyId=${id}`);
   };
   
   return (
