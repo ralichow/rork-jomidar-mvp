@@ -1,7 +1,6 @@
 # Rork Jomidar MVP
 
-Rork Jomidar MVP is a prototype application developed using the Rork platform, which enables rapid development of cross-platform mobile apps using AI and React Native . This MVP integrates features inspired by the Jomidar series of scripts, commonly used in FiveM QBCore servers, to provide immersive roleplay experiences.([rork.com][1], [github.com][2])
-
+Rork Jomidar MVP is a prototype application developed using the Rork platform, which enables rapid development of cross-platform mobile apps using AI and React Native . This MVP integrates features inspired by the Jomidar series of scripts, commonly used in FiveM QBCore servers, to provide immersive roleplay experiences.
 ## Features
 
 * **Cross-Platform Compatibility**: Built with React Native for seamless performance on both iOS and Android devices.
