@@ -1,105 +1,158 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Globe, Moon, Sun, Info, DollarSign } from 'lucide-react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { LogOut, User, Globe, Palette, Info, Shield } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useTranslation } from '@/store/languageStore';
+import { useAuthStore } from '@/store/authStore';
+
+interface SettingItemProps {
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  onPress: () => void;
+  showArrow?: boolean;
+  danger?: boolean;
+}
+
+function SettingItem({ icon, title, subtitle, onPress, showArrow = true, danger = false }: SettingItemProps) {
+  return (
+    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
+      <View style={styles.settingItemLeft}>
+        <View style={[styles.iconContainer, danger && styles.dangerIconContainer]}>
+          {icon}
+        </View>
+        <View style={styles.settingItemText}>
+          <Text style={[styles.settingTitle, danger && styles.dangerText]}>{title}</Text>
+          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+        </View>
+      </View>
+      {showArrow && (
+        <Text style={[styles.arrow, danger && styles.dangerText]}>›</Text>
+      )}
+    </TouchableOpacity>
+  );
+}
 
 export default function SettingsScreen() {
-  const { t, language, setLanguage } = useTranslation();
+  const { t } = useTranslation();
+  const { user, logout } = useAuthStore();
+  
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            router.replace('/auth/login');
+          },
+        },
+      ]
+    );
+  };
   
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('language')}</Text>
-        <View style={styles.optionContainer}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              language === 'en' && styles.selectedOptionButton
-            ]}
-            onPress={() => setLanguage('en')}
-          >
-            <Globe size={20} color={language === 'en' ? colors.primary : colors.text.secondary} />
-            <Text style={[
-              styles.optionText,
-              language === 'en' && styles.selectedOptionText
-            ]}>
-              {t('english')}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              language === 'bn' && styles.selectedOptionButton
-            ]}
-            onPress={() => setLanguage('bn')}
-          >
-            <Globe size={20} color={language === 'bn' ? colors.primary : colors.text.secondary} />
-            <Text style={[
-              styles.optionText,
-              language === 'bn' && styles.selectedOptionText
-            ]}>
-              {t('bangla')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('app_settings')}</Text>
-        
-        <View style={styles.settingItem}>
-          <View style={styles.settingIconContainer}>
-            <Sun size={20} color={colors.text.secondary} />
-          </View>
-          <View style={styles.settingContent}>
-            <Text style={styles.settingTitle}>{t('theme')}</Text>
-            <View style={styles.settingOptions}>
-              <TouchableOpacity style={[styles.settingOption, styles.selectedSettingOption]}>
-                <Text style={[styles.settingOptionText, styles.selectedSettingOptionText]}>{t('light')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.settingOption}>
-                <Text style={styles.settingOptionText}>{t('dark')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.settingOption}>
-                <Text style={styles.settingOptionText}>{t('system')}</Text>
-              </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* User Profile Section */}
+        <View style={styles.section}>
+          <View style={styles.profileCard}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarText}>
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{user?.name || 'User'}</Text>
+              <Text style={styles.profileMobile}>{user?.mobile || ''}</Text>
+              {user?.email && (
+                <Text style={styles.profileEmail}>{user.email}</Text>
+              )}
             </View>
           </View>
         </View>
         
-        <View style={styles.settingItem}>
-          <View style={styles.settingIconContainer}>
-            <DollarSign size={20} color={colors.text.secondary} />
-          </View>
-          <View style={styles.settingContent}>
-            <Text style={styles.settingTitle}>{t('currency')}</Text>
-            <View style={styles.settingOptions}>
-              <TouchableOpacity style={[styles.settingOption, styles.selectedSettingOption]}>
-                <Text style={[styles.settingOptionText, styles.selectedSettingOptionText]}>৳ BDT</Text>
-              </TouchableOpacity>
-            </View>
+        {/* Account Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.settingsGroup}>
+            <SettingItem
+              icon={<User size={20} color={colors.text.secondary} />}
+              title="Profile"
+              subtitle="Manage your profile information"
+              onPress={() => Alert.alert('Coming Soon', 'Profile management will be available soon.')}
+            />
+            <SettingItem
+              icon={<Shield size={20} color={colors.text.secondary} />}
+              title="Privacy & Security"
+              subtitle="Manage your privacy settings"
+              onPress={() => Alert.alert('Coming Soon', 'Privacy settings will be available soon.')}
+            />
           </View>
         </View>
-      </View>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('about')}</Text>
         
-        <View style={styles.aboutContainer}>
-          <Text style={styles.appName}>{t('app_name')}</Text>
-          <Text style={styles.appSubtitle}>{t('app_subtitle')}</Text>
-          <Text style={styles.versionText}>{t('version')}: 1.0.0</Text>
-          
-          <View style={styles.aboutContent}>
-            <Text style={styles.aboutText}>
-              Jomidar is a comprehensive property management app designed for landlords in Bangladesh to manage their properties, tenants, payments, and documents efficiently.
-            </Text>
+        {/* App Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>App Settings</Text>
+          <View style={styles.settingsGroup}>
+            <SettingItem
+              icon={<Globe size={20} color={colors.text.secondary} />}
+              title="Language"
+              subtitle="English"
+              onPress={() => Alert.alert('Coming Soon', 'Language settings will be available soon.')}
+            />
+            <SettingItem
+              icon={<Palette size={20} color={colors.text.secondary} />}
+              title="Theme"
+              subtitle="Light"
+              onPress={() => Alert.alert('Coming Soon', 'Theme settings will be available soon.')}
+            />
           </View>
         </View>
-      </View>
-    </ScrollView>
+        
+        {/* About */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.settingsGroup}>
+            <SettingItem
+              icon={<Info size={20} color={colors.text.secondary} />}
+              title="About Jomidar"
+              subtitle="Version 1.0.0"
+              onPress={() => Alert.alert('About Jomidar', 'Jomidar is a property management app designed to help landlords manage their properties, tenants, and payments efficiently.')}
+            />
+          </View>
+        </View>
+        
+        {/* Logout */}
+        <View style={styles.section}>
+          <View style={styles.settingsGroup}>
+            <SettingItem
+              icon={<LogOut size={20} color={colors.danger} />}
+              title="Logout"
+              onPress={handleLogout}
+              showArrow={false}
+              danger
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -108,121 +161,126 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  section: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: 16,
-  },
-  optionContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
+  scrollView: {
     flex: 1,
   },
-  selectedOptionButton: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
+  section: {
+    marginBottom: 24,
   },
-  optionText: {
+  sectionTitle: {
     fontSize: 16,
-    color: colors.text.secondary,
-    marginLeft: 8,
-  },
-  selectedOptionText: {
-    color: colors.primary,
     fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 12,
+    marginHorizontal: 20,
+  },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    marginHorizontal: 20,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  profileAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  profileAvatarText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 4,
+  },
+  profileMobile: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 2,
+  },
+  profileEmail: {
+    fontSize: 14,
+    color: colors.text.tertiary,
+  },
+  settingsGroup: {
+    backgroundColor: colors.card,
+    marginHorizontal: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   settingItem: {
     flexDirection: 'row',
-    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  settingIconContainer: {
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: 20,
     backgroundColor: colors.background,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  settingContent: {
+  dangerIconContainer: {
+    backgroundColor: '#FEF2F2',
+  },
+  settingItemText: {
     flex: 1,
   },
   settingTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: 2,
   },
-  settingOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  settingOption: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  selectedSettingOption: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  settingOptionText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-  },
-  selectedSettingOptionText: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  aboutContainer: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  appName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text.primary,
-  },
-  appSubtitle: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    marginTop: 4,
-  },
-  versionText: {
+  settingSubtitle: {
     fontSize: 14,
     color: colors.text.tertiary,
-    marginTop: 8,
   },
-  aboutContent: {
-    marginTop: 16,
-    paddingHorizontal: 16,
+  arrow: {
+    fontSize: 20,
+    color: colors.text.tertiary,
+    fontWeight: '300',
   },
-  aboutText: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: 20,
+  dangerText: {
+    color: colors.danger,
   },
 });
