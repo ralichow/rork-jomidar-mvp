@@ -217,33 +217,54 @@ export const mockPayments: Payment[] = [
 ];
 
 export const mockDocuments: Document[] = [
-  {
-    id: 'd1',
-    name: 'Lease Agreement - Rahim Ahmed',
-    type: 'lease',
-    url: 'https://example.com/lease1.pdf',
-    uploadDate: '2023-01-01',
-    relatedTo: 'tenant',
-    relatedId: 't1'
-  },
-  {
-    id: 'd2',
-    name: 'Rent Receipt - May 2023',
-    type: 'receipt',
-    url: 'https://example.com/receipt1.pdf',
-    uploadDate: '2023-05-05',
-    relatedTo: 'tenant',
-    relatedId: 't1'
-  },
-  {
-    id: 'd3',
-    name: 'Property Deed - Bashundhara Residency',
-    type: 'other',
-    url: 'https://example.com/deed1.pdf',
-    uploadDate: '2022-12-15',
-    relatedTo: 'property',
-    relatedId: '1'
-  }
+    {
+        id: 'd1',
+        name: 'Lease Agreement - Rahim Ahmed',
+        type: 'lease',
+        url: 'https://example.com/lease1.pdf',
+        uploadDate: '2023-01-01',
+        relatedTo: 'tenant',
+        relatedId: 't1',
+        source: {
+            type: 'image',
+            uri: '',
+            name: undefined,
+            mimeType: undefined,
+            size: undefined
+        }
+    },
+    {
+        id: 'd2',
+        name: 'Rent Receipt - May 2023',
+        type: 'receipt',
+        url: 'https://example.com/receipt1.pdf',
+        uploadDate: '2023-05-05',
+        relatedTo: 'tenant',
+        relatedId: 't1',
+        source: {
+            type: 'image',
+            uri: '',
+            name: undefined,
+            mimeType: undefined,
+            size: undefined
+        }
+    },
+    {
+        id: 'd3',
+        name: 'Property Deed - Bashundhara Residency',
+        type: 'other',
+        url: 'https://example.com/deed1.pdf',
+        uploadDate: '2022-12-15',
+        relatedTo: 'property',
+        relatedId: '1',
+        source: {
+            type: 'image',
+            uri: '',
+            name: undefined,
+            mimeType: undefined,
+            size: undefined
+        }
+    }
 ];
 
 export const mockDashboardStats: DashboardStats = {
