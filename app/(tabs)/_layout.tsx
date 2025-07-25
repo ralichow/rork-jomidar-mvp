@@ -1,11 +1,23 @@
-import React from "react";
-import { Tabs } from "expo-router";
-import { Home, Building, Users, CreditCard, FileText, Settings } from "lucide-react-native";
-import colors from "@/constants/colors";
-import { useTranslation } from "@/store/languageStore";
+import React, { useEffect } from 'react';
+import { Tabs, router } from 'expo-router';
+import { Home, Building, Users, CreditCard, FileText, Settings } from 'lucide-react-native';
+import colors from '@/constants/colors';
+import { useTranslation } from '@/store/languageStore';
+import { useAuthStore } from '@/store/authStore';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
+  
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/auth/login');
+    }
+  }, [isAuthenticated]);
+  
+  if (!isAuthenticated) {
+    return null;
+  }
   
   return (
     <Tabs

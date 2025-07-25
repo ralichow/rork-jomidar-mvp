@@ -6,9 +6,10 @@ import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import colors from "@/constants/colors";
 import { useTranslation } from "@/store/languageStore";
+import { useAuthStore } from "@/store/authStore";
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "auth/login",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -41,6 +42,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
   
   return (
     <>
@@ -60,6 +62,13 @@ function RootLayoutNav() {
           },
         }}
       >
+        <Stack.Screen 
+          name="auth/login" 
+          options={{ 
+            headerShown: false,
+            gestureEnabled: false
+          }} 
+        />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 
           name="property/[id]" 
