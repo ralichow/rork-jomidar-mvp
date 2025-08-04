@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { LogOut, User, Globe, Palette, Info, Shield } from 'lucide-react-native';
+import { LogOut, User, Globe, Palette, Info, Shield, Check, X } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useTranslation } from '@/store/languageStore';
 import { useAuthStore } from '@/store/authStore';
@@ -43,8 +44,9 @@ function SettingItem({ icon, title, subtitle, onPress, showArrow = true, danger 
 }
 
 export default function SettingsScreen() {
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const { user, logout } = useAuthStore();
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   
   const handleLogout = () => {
     Alert.alert(
@@ -113,9 +115,9 @@ export default function SettingsScreen() {
           <View style={styles.settingsGroup}>
             <SettingItem
               icon={<Globe size={20} color={colors.text.secondary} />}
-              title="Language"
-              subtitle="English"
-              onPress={() => Alert.alert('Coming Soon', 'Language settings will be available soon.')}
+              title={t('language')}
+              subtitle={language === 'en' ? t('english') : t('bangla')}
+              onPress={() => setShowLanguageModal(true)}
             />
             <SettingItem
               icon={<Palette size={20} color={colors.text.secondary} />}
@@ -152,6 +154,56 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+      
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('language')}</Text>
+              <TouchableOpacity
+                onPress={() => setShowLanguageModal(false)}
+                style={styles.closeButton}
+              >
+                <X size={24} color={colors.text.secondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.languageOptions}>
+              <TouchableOpacity
+                style={styles.languageOption}
+                onPress={() => {
+                  setLanguage('en');
+                  setShowLanguageModal(false);
+                }}
+              >
+                <Text style={styles.languageText}>{t('english')}</Text>
+                {language === 'en' && (
+                  <Check size={20} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.languageOption}
+                onPress={() => {
+                  setLanguage('bn');
+                  setShowLanguageModal(false);
+                }}
+              >
+                <Text style={styles.languageText}>{t('bangla')}</Text>
+                {language === 'bn' && (
+                  <Check size={20} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -282,5 +334,58 @@ const styles = StyleSheet.create({
   },
   dangerText: {
     color: colors.danger,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 0,
+    width: '80%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  languageOptions: {
+    padding: 8,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginVertical: 2,
+  },
+  languageText: {
+    fontSize: 16,
+    color: colors.text.primary,
   },
 });
