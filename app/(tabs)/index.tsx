@@ -1,87 +1,98 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Building2, CreditCard, Download, HomeIcon, Plus, Users, AlertCircle, FileText } from 'lucide-react-native';
-import colors from '@/constants/colors';
-import { useAppStore } from '@/store/appStore';
-import { useTranslation } from '@/store/languageStore';
-import StatCard from '@/components/UI/StatCard';
-import DashboardCard from '@/components/UI/DashboardCard';
-import Button from '@/components/UI/Button';
-import { generateAndSharePaymentsReport } from '@/utils/reportUtils';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { useRouter } from "expo-router";
+import {
+  Building2,
+  CreditCard,
+  Download,
+  HomeIcon,
+  Plus,
+  Users,
+  AlertCircle,
+  FileText,
+} from "lucide-react-native";
+import colors from "@/constants/colors";
+import { useAppStore } from "@/store/appStore";
+import { useTranslation } from "@/store/languageStore";
+import StatCard from "@/components/UI/StatCard";
+import DashboardCard from "@/components/UI/DashboardCard";
+import Button from "@/components/UI/Button";
+import { generateAndSharePaymentsReport } from "@/utils/reportUtils";
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { 
-    properties, 
-    tenants, 
-    payments, 
-    documents,
-    dashboardStats 
-  } = useAppStore();
-  
+  const { properties, tenants, payments, documents, dashboardStats } =
+    useAppStore();
+
   const { t } = useTranslation();
-  
+
   // Calculate pending/overdue/underpaid payments
-  const pendingPayments = payments.filter(p => p.status === 'pending');
-  const overduePayments = payments.filter(p => p.status === 'overdue');
-  const underpaidPayments = payments.filter(p => p.status === 'underpaid');
-  
+  const pendingPayments = payments.filter((p) => p.status === "pending");
+  const overduePayments = payments.filter((p) => p.status === "overdue");
+  const underpaidPayments = payments.filter((p) => p.status === "underpaid");
+
   const handleGeneratePaymentsReport = async () => {
     try {
       await generateAndSharePaymentsReport(
         payments,
         tenants,
         properties,
-        'all_payments'
+        "all_payments"
       );
     } catch (error) {
       Alert.alert("Error", "Failed to generate report. Please try again.");
     }
   };
-  
+
   return (
     <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollContainer} 
+      <ScrollView
+        style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         stickyHeaderIndices={[0]}
       >
         {/* Sticky Header - Only this part should be sticky */}
         <View style={styles.stickyHeader}>
-          <Text style={styles.appName}>{t('app_name')}</Text>
+          <Text style={styles.appName}>{t("app_name")}</Text>
         </View>
-        
+
         {/* Stats Section - This should scroll normally */}
         <View style={styles.statsContainer}>
           <View style={styles.statsRow}>
             <StatCard
-              title={t('properties')}
+              title={t("properties")}
               value={dashboardStats.totalProperties}
               icon={<Building2 size={18} color={colors.primary} />}
               color={colors.primary}
             />
-            
+
             <StatCard
-              title={t('units')}
+              title={t("units")}
               value={dashboardStats.totalUnits}
               icon={<HomeIcon size={18} color={colors.secondary} />}
               color={colors.secondary}
             />
           </View>
-          
+
           <View style={styles.statsRow}>
             <StatCard
-              title={t('occupancy')}
+              title={t("occupancy")}
               value={Math.round(dashboardStats.occupancyRate)}
               icon={<Users size={18} color={colors.accent} />}
               color={colors.accent}
               isPercentage
             />
-            
+
             <StatCard
-              title={t('monthly_revenue')}
+              title={t("monthly_revenue")}
               value={dashboardStats.monthlyRevenue}
               icon={<CreditCard size={18} color={colors.success} />}
               color={colors.success}
@@ -89,55 +100,68 @@ export default function DashboardScreen() {
             />
           </View>
         </View>
-        
-        {(pendingPayments.length > 0 || overduePayments.length > 0 || underpaidPayments.length > 0) && (
+
+        {(pendingPayments.length > 0 ||
+          overduePayments.length > 0 ||
+          underpaidPayments.length > 0) && (
           <View style={styles.alertContainer}>
             <View style={styles.alertHeader}>
               <AlertCircle size={20} color={colors.warning} />
-              <Text style={styles.alertTitle}>{t('payment_alerts')}</Text>
+              <Text style={styles.alertTitle}>{t("payment_alerts")}</Text>
             </View>
-            
+
             {pendingPayments.length > 0 && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.alertItem}
-                onPress={() => router.push('/payments')}
+                onPress={() => router.push("/payments")}
               >
                 <Text style={styles.alertText}>
-                  {pendingPayments.length} {pendingPayments.length > 1 ? t('pending_payments_plural') : t('pending_payments')}
+                  {pendingPayments.length}{" "}
+                  {pendingPayments.length > 1
+                    ? t("pending_payments_plural")
+                    : t("pending_payments")}
                 </Text>
               </TouchableOpacity>
             )}
-            
+
             {overduePayments.length > 0 && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.alertItem}
-                onPress={() => router.push('/payments')}
+                onPress={() => router.push("/payments")}
               >
                 <Text style={[styles.alertText, { color: colors.danger }]}>
-                  {overduePayments.length} {overduePayments.length > 1 ? t('overdue_payments_plural') : t('overdue_payments')}
+                  {overduePayments.length}{" "}
+                  {overduePayments.length > 1
+                    ? t("overdue_payments_plural")
+                    : t("overdue_payments")}
                 </Text>
               </TouchableOpacity>
             )}
-            
+
             {underpaidPayments.length > 0 && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.alertItem}
-                onPress={() => router.push('/payments')}
+                onPress={() => router.push("/payments")}
               >
                 <Text style={[styles.alertText, { color: colors.accent }]}>
-                  {underpaidPayments.length} {underpaidPayments.length > 1 ? t('underpaid_payments_plural') : t('underpaid_payments')}
+                  {underpaidPayments.length}{" "}
+                  {underpaidPayments.length > 1
+                    ? t("underpaid_payments_plural")
+                    : t("underpaid_payments")}
                 </Text>
               </TouchableOpacity>
             )}
           </View>
         )}
-        
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('manage_your_properties')}</Text>
-            
+            <Text style={styles.sectionTitle}>
+              {t("manage_your_properties")}
+            </Text>
+
             {payments.length > 0 && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.reportButton}
                 onPress={handleGeneratePaymentsReport}
               >
@@ -146,82 +170,102 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             )}
           </View>
-          
+
           <DashboardCard
-            title={t('properties')}
+            title={t("properties")}
             count={properties.length}
             icon={<Building2 size={24} color={colors.primary} />}
-            onPress={() => router.push('/properties')}
+            onPress={() => router.push("/properties")}
             color={colors.primary}
           />
-          
+
           <DashboardCard
-            title={t('tenants')}
+            title={t("tenants")}
             count={tenants.length}
             icon={<Users size={24} color={colors.secondary} />}
-            onPress={() => router.push('/tenants')}
+            onPress={() => router.push("/tenants")}
             color={colors.secondary}
           />
-          
+
           <DashboardCard
-            title={t('payments')}
+            title={t("payments")}
             count={payments.length}
             icon={<CreditCard size={24} color={colors.success} />}
-            onPress={() => router.push('/payments')}
+            onPress={() => router.push("/payments")}
             color={colors.success}
           />
-          
+
           <DashboardCard
-            title={t('documents')}
+            title={t("documents")}
             count={documents.length}
             icon={<FileText size={24} color={colors.accent} />}
-            onPress={() => router.push('/documents')}
+            onPress={() => router.push("/documents")}
             color={colors.accent}
           />
         </View>
-        
+
         <View style={styles.quickActionsContainer}>
-          <Text style={styles.sectionTitle}>{t('quick_actions')}</Text>
-          
+          <Text style={styles.sectionTitle}>{t("quick_actions")}</Text>
+
           <View style={styles.quickActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.quickAction}
-              onPress={() => router.push('/property/add')}
+              onPress={() => router.push("/property/add")}
             >
-              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.primary}15` }]}>
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
                 <Building2 size={24} color={colors.primary} />
               </View>
-              <Text style={styles.quickActionText}>{t('add_property')}</Text>
+              <Text style={styles.quickActionText}>{t("add_property")}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.quickAction}
-              onPress={() => router.push('/tenant/add')}
+              onPress={() => router.push("/tenant/add")}
             >
-              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.secondary}15` }]}>
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: `${colors.secondary}15` },
+                ]}
+              >
                 <Users size={24} color={colors.secondary} />
               </View>
-              <Text style={styles.quickActionText}>{t('add_tenant')}</Text>
+              <Text style={styles.quickActionText}>{t("add_tenant")}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.quickAction}
-              onPress={() => router.push('/payment/add')}
+              onPress={() => router.push("/payment/add")}
             >
-              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.success}15` }]}>
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: `${colors.success}15` },
+                ]}
+              >
                 <CreditCard size={24} color={colors.success} />
               </View>
-              <Text style={styles.quickActionText}>{t('record_payment')}</Text>
+              <Text style={styles.quickActionText}>{t("record_payment")}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.quickAction}
-              onPress={() => router.push('/document/add')}
+              onPress={() => router.push("/document/add")}
             >
-              <View style={[styles.quickActionIcon, { backgroundColor: `${colors.accent}15` }]}>
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: `${colors.accent}15` },
+                ]}
+              >
                 <FileText size={24} color={colors.accent} />
               </View>
-              <Text style={styles.quickActionText}>{t('add_document')}</Text>
+              <Text style={styles.quickActionText}>{t("add_document")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -251,15 +295,15 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text.primary,
   },
   statsContainer: {
     padding: 16,
   },
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   alertContainer: {
@@ -272,13 +316,13 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.warning,
   },
   alertHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   alertTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text.primary,
     marginLeft: 8,
   },
@@ -290,27 +334,27 @@ const styles = StyleSheet.create({
   alertText: {
     fontSize: 14,
     color: colors.warning,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   section: {
     marginBottom: 24,
     paddingHorizontal: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text.primary,
     marginBottom: 12,
   },
   reportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: `${colors.primary}15`,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -318,7 +362,7 @@ const styles = StyleSheet.create({
   },
   reportButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.primary,
     marginLeft: 6,
   },
@@ -326,31 +370,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   quickActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: 12,
   },
   quickAction: {
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
-    width: '48%',
+    alignItems: "center",
+    width: "48%",
     marginBottom: 12,
   },
   quickActionIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
   },
   quickActionText: {
     fontSize: 14,
     color: colors.text.primary,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "500",
+    textAlign: "center",
   },
 });
