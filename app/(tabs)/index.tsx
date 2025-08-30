@@ -26,30 +26,33 @@ import DashboardCard from "@/components/UI/DashboardCard";
 import Button from "@/components/UI/Button";
 import { generateAndSharePaymentsReport } from "@/utils/reportUtils";
 
+import React, { useEffect } from "react"; // 👈 already have React, just add useEffect
+
 export default function DashboardScreen() {
   const router = useRouter();
-  const { properties, tenants, payments, documents, dashboardStats } =
-    useAppStore();
+
+  const { 
+    properties, 
+    tenants, 
+    payments, 
+    documents, 
+    dashboardStats,
+    fetchProperties, 
+    fetchTenants, 
+    fetchDocuments, 
+    fetchPayments // 👈 this one only if you add it in the store
+  } = useAppStore();
 
   const { t } = useTranslation();
 
-  // Calculate pending/overdue/underpaid payments
-  const pendingPayments = payments.filter((p) => p.status === "pending");
-  const overduePayments = payments.filter((p) => p.status === "overdue");
-  const underpaidPayments = payments.filter((p) => p.status === "underpaid");
-
-  const handleGeneratePaymentsReport = async () => {
-    try {
-      await generateAndSharePaymentsReport(
-        payments,
-        tenants,
-        properties,
-        "all_payments"
-      );
-    } catch (error) {
-      Alert.alert("Error", "Failed to generate report. Please try again.");
-    }
-  };
+  // 🔥 Add this block
+  useEffect(() => {
+    fetchProperties();
+    fetchTenants();
+    fetchDocuments();
+    if (fetchPayments) fetchPayments(); // optional, if store has payments
+  }, []);
+}
 
   return (
     <View style={styles.container}>
