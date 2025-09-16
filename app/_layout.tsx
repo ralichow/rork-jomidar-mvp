@@ -42,8 +42,9 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuthStore();
-  
+  const { user } = useAuthStore();
+  const isAuthenticated = !!user;
+
   return (
     <>
       <StatusBar style="dark" />
@@ -55,76 +56,76 @@ function RootLayoutNav() {
           headerShadowVisible: false,
           headerTintColor: colors.text.primary,
           headerTitleStyle: {
-            fontWeight: '600',
+            fontWeight: "600",
           },
           contentStyle: {
             backgroundColor: colors.background,
           },
         }}
       >
-        <Stack.Screen 
-          name="auth/login" 
-          options={{ 
+        <Stack.Screen
+          name="auth/login"
+          options={{
             headerShown: false,
-            gestureEnabled: false
-          }} 
+            gestureEnabled: false,
+          }}
         />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="property/[id]" 
-          options={{ 
-            title: t('property_details'),
-            headerBackTitle: t('properties')
-          }} 
+        <Stack.Screen
+          name="property/[id]"
+          options={{
+            title: t("property_details"),
+            headerBackTitle: t("properties"),
+          }}
         />
-        <Stack.Screen 
-          name="property/add" 
-          options={{ 
-            title: t('add_property'),
-            headerBackTitle: t('properties')
-          }} 
+        <Stack.Screen
+          name="property/add"
+          options={{
+            title: t("add_property"),
+            headerBackTitle: t("properties"),
+          }}
         />
-        <Stack.Screen 
-          name="tenant/[id]" 
-          options={{ 
-            title: t('tenant_details'),
-            headerBackTitle: t('tenants')
-          }} 
+        <Stack.Screen
+          name="tenant/[id]"
+          options={{
+            title: t("tenant_details"),
+            headerBackTitle: t("tenants"),
+          }}
         />
-        <Stack.Screen 
-          name="tenant/add" 
-          options={{ 
-            title: t('add_tenant'),
-            headerBackTitle: t('tenants')
-          }} 
+        <Stack.Screen
+          name="tenant/add"
+          options={{
+            title: t("add_tenant"),
+            headerBackTitle: t("tenants"),
+          }}
         />
-        <Stack.Screen 
-          name="payment/[id]" 
-          options={{ 
-            title: t('payment_details'),
-            headerBackTitle: t('payments')
-          }} 
+        <Stack.Screen
+          name="payment/[id]"
+          options={{
+            title: t("payment_details"),
+            headerBackTitle: t("payments"),
+          }}
         />
-        <Stack.Screen 
-          name="payment/add" 
-          options={{ 
-            title: t('record_payment'),
-            headerBackTitle: t('payments')
-          }} 
+        <Stack.Screen
+          name="payment/add"
+          options={{
+            title: t("record_payment"),
+            headerBackTitle: t("payments"),
+          }}
         />
-        <Stack.Screen 
-          name="document/[id]" 
-          options={{ 
-            title: t('document'),
-            headerBackTitle: t('go_back')
-          }} 
+        <Stack.Screen
+          name="document/[id]"
+          options={{
+            title: t("document"),
+            headerBackTitle: t("go_back"),
+          }}
         />
-        <Stack.Screen 
-          name="document/add" 
-          options={{ 
-            title: t('add_document'),
-            headerBackTitle: t('go_back')
-          }} 
+        <Stack.Screen
+          name="document/add"
+          options={{
+            title: t("add_document"),
+            headerBackTitle: t("go_back"),
+          }}
         />
       </Stack>
     </>
