@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.jomidar-property-management"
+      "bundleIdentifier": "app.rork.jomidarpropertymanagement"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.jomidar-property-management"
+      "package": "app.rork.jomidarpropertymanagement"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
