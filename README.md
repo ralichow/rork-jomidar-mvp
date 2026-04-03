@@ -27,7 +27,18 @@ Rork Jomidar MVP is a prototype application developed using the Rork platform, w
    npm install
    ```
 
-4. **Run the App**:
+4. **Configure Supabase**:
+
+  Create a `.env.local` file in the project root (this file is ignored by git):
+
+   ```bash
+   EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+   ```
+
+   You can find both values in Supabase Dashboard -> Project Settings -> API.
+
+5. **Run the App**:
 
    ```bash
    npm start
