@@ -45,30 +45,6 @@ export const authService = {
         return { data: null, error: duplicateEmailError }
       }
 
-      // Create profile
-      if (data.user) {
-        supabaseReqTrace('profiles', 'insert', { id: data.user.id, email: data.user.email, userType })
-
-        try {
-          const { error: profileError } = await supabase.from('profiles').insert({
-            id: data.user.id,
-            email: data.user.email!,
-            full_name: fullName,
-            user_type: userType,
-          })
-
-          if (profileError) {
-            supabaseErrTrace('profiles', 'insert', profileError)
-            return { data: null, error: profileError.message }
-          }
-
-          supabaseResTrace('profiles', 'insert', { userId: data.user.id, rows: 1 })
-        } catch (profileInsertError: any) {
-          supabaseErrTrace('profiles', 'insert', profileInsertError)
-          return { data: null, error: profileInsertError?.message ?? String(profileInsertError) }
-        }
-      }
-
       return { data, error: null }
     } catch (error: any) {
       supabaseErrTrace('auth', 'signUp', error)
