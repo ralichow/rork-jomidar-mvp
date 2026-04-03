@@ -20,6 +20,7 @@ interface AuthState {
   signup: (name: string, mobile: string, password: string, email?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setLoading: (loading: boolean) => void;
+  setAuthFromSupabase: (user: { id: string; email?: string; user_metadata?: any } | null) => void;
 }
 
 // Mock user database - in a real app, this would be handled by your backend
@@ -138,6 +139,37 @@ export const useAuthStore = create<AuthState>()(
       
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
+      },
+
+      setAuthFromSupabase: (supabaseUser) => {
+        if (!supabaseUser) {
+          set({
+            user: null,
+            isAuthenticated: false,
+          });
+          return;
+        }
+
+        const metadata = supabaseUser.user_metadata || {};
+        const nameFromMetadata =
+          (typeof metadata.full_name === 'string' && metadata.full_name.trim()) ||
+          (typeof metadata.name === 'string' && metadata.name.trim()) ||
+          undefined;
+
+        const currentUser = get().user;
+
+        const mappedUser: User = {
+          id: supabaseUser.id,
+          name: nameFromMetadata || currentUser?.name || supabaseUser.email || 'User',
+          mobile: currentUser?.mobile || '',
+          email: supabaseUser.email ?? currentUser?.email,
+          createdAt: currentUser?.createdAt || new Date().toISOString(),
+        };
+
+        set({
+          user: mappedUser,
+          isAuthenticated: true,
+        });
       }
     }),
     {

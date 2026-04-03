@@ -8,6 +8,7 @@ import colors from "@/constants/colors";
 import { useTranslation } from "@/store/languageStore";
 import { useAuthStore } from "@/store/authStore";
 import { devFlowLog, useDevFlowMount } from "@/utils/devFlowLog";
+import { supabase } from "@/supabase/config";
 
 export const unstable_settings = {
   initialRouteName: "auth/login",
@@ -48,11 +49,40 @@ export default function RootLayout() {
 function RootLayoutNav() {
   useDevFlowMount('RootLayoutNav')
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, setAuthFromSupabase } = useAuthStore();
 
   useEffect(() => {
     devFlowLog('RootLayoutNav', `UI Effect -> isAuthenticated=${isAuthenticated}`)
   }, [isAuthenticated])
+
+  useEffect(() => {
+    let mounted = true;
+
+    const syncInitialSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          devFlowLog('RootLayoutNav', 'UI Effect -> getSession error (treat as signed out)')
+        }
+        if (!mounted) return;
+        setAuthFromSupabase(data.session?.user ?? null);
+      } catch (e) {
+        if (!mounted) return;
+        setAuthFromSupabase(null);
+      }
+    };
+
+    syncInitialSession();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthFromSupabase(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription?.unsubscribe();
+    };
+  }, [setAuthFromSupabase]);
   
   return (
     <>

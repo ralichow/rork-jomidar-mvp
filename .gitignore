@@ -39,3 +39,6 @@ yarn-error.*
 
 # Webstorm IDEA
 .idea
+
+# Cursor IDEA
+.cursor/**
