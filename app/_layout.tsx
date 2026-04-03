@@ -7,8 +7,10 @@ import { StatusBar } from "expo-status-bar";
 import colors from "@/constants/colors";
 import { useTranslation } from "@/store/languageStore";
 import { useAuthStore } from "@/store/authStore";
-import { devFlowLog, useDevFlowMount } from "@/utils/devFlowLog";
+import { devFlowLog, installTimestampedConsole, useDevFlowMount } from "@/utils/devFlowLog";
 import { supabase } from "@/supabase/config";
+
+installTimestampedConsole();
 
 export const unstable_settings = {
   initialRouteName: "auth/login",
