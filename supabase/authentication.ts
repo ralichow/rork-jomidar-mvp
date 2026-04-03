@@ -37,6 +37,14 @@ export const authService = {
         rows: getRowCount(data),
       })
 
+      // Supabase can return a masked user with no identities when the email is already registered.
+      const userIdentities = (data.user as any)?.identities
+      if (Array.isArray(userIdentities) && userIdentities.length === 0) {
+        const duplicateEmailError = 'An account with this email already exists. Please sign in instead.'
+        supabaseErrTrace('auth', 'signUp', duplicateEmailError)
+        return { data: null, error: duplicateEmailError }
+      }
+
       // Create profile
       if (data.user) {
         supabaseReqTrace('profiles', 'insert', { id: data.user.id, email: data.user.email, userType })
