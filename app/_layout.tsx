@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import colors from "@/constants/colors";
 import { useTranslation } from "@/store/languageStore";
 import { useAuthStore } from "@/store/authStore";
+import { devFlowLog, useDevFlowMount } from "@/utils/devFlowLog";
 
 export const unstable_settings = {
   initialRouteName: "auth/login",
@@ -16,12 +17,15 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useDevFlowMount('RootLayout')
+
   const [loaded, error] = useFonts({
     ...FontAwesome.font,
   });
 
   useEffect(() => {
     if (error) {
+      devFlowLog('RootLayout', 'UI Effect -> font load error')
       console.error(error);
       throw error;
     }
@@ -29,6 +33,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      devFlowLog('RootLayout', 'UI Effect -> fonts loaded (hide splash)')
       SplashScreen.hideAsync();
     }
   }, [loaded]);
@@ -41,8 +46,13 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  useDevFlowMount('RootLayoutNav')
   const { t } = useTranslation();
   const { isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    devFlowLog('RootLayoutNav', `UI Effect -> isAuthenticated=${isAuthenticated}`)
+  }, [isAuthenticated])
   
   return (
     <>

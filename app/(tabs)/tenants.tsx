@@ -6,8 +6,11 @@ import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import TenantCard from '@/components/UI/TenantCard';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function TenantsScreen() {
+  useDevFlowMount('TenantsScreen')
+
   const router = useRouter();
   const tenants = useAppStore((state) => state.tenants);
   const [searchQuery, setSearchQuery] = useState('');

@@ -6,8 +6,11 @@ import { Home, DollarSign, Bed, Bath, Square } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function AddUnitScreen() {
+  useDevFlowMount('AddUnitScreen')
+
   const router = useRouter();
   const { propertyId } = useLocalSearchParams<{ propertyId: string }>();
   const { addUnit, properties } = useAppStore();

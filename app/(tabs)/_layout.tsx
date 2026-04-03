@@ -4,14 +4,20 @@ import { Home, Building, Users, CreditCard, FileText, Settings } from 'lucide-re
 import colors from '@/constants/colors';
 import { useTranslation } from '@/store/languageStore';
 import { useAuthStore } from '@/store/authStore';
+import { devFlowLog, useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function TabLayout() {
+  useDevFlowMount('TabLayout')
+
   const { t } = useTranslation();
   const { isAuthenticated } = useAuthStore();
   
   useEffect(() => {
     if (!isAuthenticated) {
+      devFlowLog('TabLayout', 'UI Effect -> auth missing (redirect to login)')
       router.replace('/auth/login');
+    } else {
+      devFlowLog('TabLayout', 'UI Effect -> authenticated (render tabs)')
     }
   }, [isAuthenticated]);
   

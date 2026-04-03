@@ -6,8 +6,11 @@ import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
 import StatCard from '@/components/UI/StatCard';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function PropertyDetailScreen() {
+  useDevFlowMount('PropertyDetailScreen')
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { properties, tenants, deleteProperty } = useAppStore();

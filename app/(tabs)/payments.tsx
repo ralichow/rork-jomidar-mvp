@@ -7,8 +7,11 @@ import { useAppStore } from '@/store/appStore';
 import PaymentCard from '@/components/UI/PaymentCard';
 import Button from '@/components/UI/Button';
 import { generateAndSharePaymentsReport } from '@/utils/reportUtils';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function PaymentsScreen() {
+  useDevFlowMount('PaymentsScreen')
+
   const router = useRouter();
   const { payments, tenants, properties } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');

@@ -1,7 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import { Platform, StyleSheet, Text, View } from "react-native";
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function ModalScreen() {
+  useDevFlowMount('ModalScreen')
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Modal</Text>

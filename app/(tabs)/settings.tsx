@@ -13,6 +13,7 @@ import { LogOut, User, Globe, Palette, Info, Shield } from 'lucide-react-native'
 import colors from '@/constants/colors';
 import { useTranslation } from '@/store/languageStore';
 import { useAuthStore } from '@/store/authStore';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -43,6 +44,8 @@ function SettingItem({ icon, title, subtitle, onPress, showArrow = true, danger 
 }
 
 export default function SettingsScreen() {
+  useDevFlowMount('SettingsScreen')
+
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   

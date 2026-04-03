@@ -9,8 +9,11 @@ import StatCard from '@/components/UI/StatCard';
 import DashboardCard from '@/components/UI/DashboardCard';
 import Button from '@/components/UI/Button';
 import { generateAndSharePaymentsReport } from '@/utils/reportUtils';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function DashboardScreen() {
+  useDevFlowMount('DashboardScreen')
+
   const router = useRouter();
   const { 
     properties, 

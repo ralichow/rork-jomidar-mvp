@@ -6,8 +6,11 @@ import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
 import { generateAndSharePaymentReceipt } from '@/utils/reportUtils';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function PaymentDetailScreen() {
+  useDevFlowMount('PaymentDetailScreen')
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { payments, tenants, properties, deletePayment, updatePayment } = useAppStore();

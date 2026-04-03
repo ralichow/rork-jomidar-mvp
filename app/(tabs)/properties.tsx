@@ -6,8 +6,11 @@ import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import PropertyCard from '@/components/UI/PropertyCard';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function PropertiesScreen() {
+  useDevFlowMount('PropertiesScreen')
+
   const router = useRouter();
   const properties = useAppStore((state) => state.properties);
   const [searchQuery, setSearchQuery] = useState('');

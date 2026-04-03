@@ -5,8 +5,11 @@ import { Calendar, CreditCard, DollarSign, FileText, User, X, AlertCircle } from
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { devFlowLog, useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function AddPaymentScreen() {
+  useDevFlowMount('AddPaymentScreen')
+
   const router = useRouter();
   const { tenants, properties, addPayment } = useAppStore();
   
@@ -37,9 +40,11 @@ export default function AddPaymentScreen() {
   // Update expected amount when tenant or payment type changes
   useEffect(() => {
     if (selectedTenant && type === 'rent') {
+      devFlowLog('AddPaymentScreen', `UI Effect -> setExpectedAmount (tenantId=${selectedTenant.id})`)
       setExpectedAmount(selectedTenant.monthlyRent);
       setAmount(selectedTenant.monthlyRent.toString());
     } else {
+      devFlowLog('AddPaymentScreen', 'UI Effect -> clearExpectedAmount')
       setExpectedAmount(null);
     }
   }, [selectedTenant, type]);
@@ -49,9 +54,11 @@ export default function AddPaymentScreen() {
     if (expectedAmount && amount) {
       const amountValue = Number(amount);
       if (amountValue < expectedAmount) {
+        devFlowLog('AddPaymentScreen', `UI Effect -> setUnderpaid (amount=${amountValue})`)
         setStatus('underpaid');
         setRemainingAmount(expectedAmount - amountValue);
       } else {
+        devFlowLog('AddPaymentScreen', `UI Effect -> setPaid (amount=${amountValue})`)
         setStatus('paid');
         setRemainingAmount(null);
       }
@@ -59,6 +66,11 @@ export default function AddPaymentScreen() {
   }, [amount, expectedAmount]);
   
   const handleSubmit = () => {
+    devFlowLog(
+      'AddPaymentScreen',
+      `UI Trigger -> addPayment (tenantId=${selectedTenantId || '-'}, type=${type}, status=${status})`
+    )
+
     // Validate required fields
     if (!selectedTenantId) {
       Alert.alert('Error', 'Please select a tenant');
@@ -99,9 +111,11 @@ export default function AddPaymentScreen() {
       });
       
       router.replace('/payments');
+      devFlowLog('AddPaymentScreen', 'State Updated -> payment added & navigated to /payments')
     } catch (error) {
       Alert.alert('Error', 'Failed to add payment');
       console.error(error);
+      devFlowLog('AddPaymentScreen', 'State Updated -> addPayment failed (alert shown)')
     } finally {
       setIsSubmitting(false);
     }

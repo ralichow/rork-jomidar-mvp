@@ -5,8 +5,11 @@ import { Calendar, Home, Mail, Phone, User, X, ShieldCheck } from 'lucide-react-
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function AddTenantScreen() {
+  useDevFlowMount('AddTenantScreen')
+
   const router = useRouter();
   const { properties, addTenant } = useAppStore();
   

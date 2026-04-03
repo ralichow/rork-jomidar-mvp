@@ -5,8 +5,11 @@ import { Calendar, Download, Edit2, ExternalLink, FileText, Trash2, User } from 
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function DocumentDetailScreen() {
+  useDevFlowMount('DocumentDetailScreen')
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { documents, tenants, properties, deleteDocument } = useAppStore();

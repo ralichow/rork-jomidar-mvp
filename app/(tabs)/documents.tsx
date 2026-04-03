@@ -7,8 +7,11 @@ import { useAppStore } from '@/store/appStore';
 import DocumentCard from '@/components/UI/DocumentCard';
 import Button from '@/components/UI/Button';
 import { Document } from '@/types';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function DocumentsScreen() {
+  useDevFlowMount('DocumentsScreen')
+
   const router = useRouter();
   const documents = useAppStore((state) => state.documents);
   const [searchQuery, setSearchQuery] = useState('');

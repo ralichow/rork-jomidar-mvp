@@ -7,8 +7,11 @@ import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
 import DocumentCard from '@/components/UI/DocumentCard';
 import PaymentCard from '@/components/UI/PaymentCard';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function TenantDetailScreen() {
+  useDevFlowMount('TenantDetailScreen')
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { tenants, properties, payments, documents, deleteTenant } = useAppStore();

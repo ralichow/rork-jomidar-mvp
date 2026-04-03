@@ -5,8 +5,11 @@ import { Building2, MapPin, X } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function AddPropertyScreen() {
+  useDevFlowMount('AddPropertyScreen')
+
   const router = useRouter();
   const { addProperty } = useAppStore();
   

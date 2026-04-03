@@ -7,9 +7,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import colors from '@/constants/colors';
 import { useAppStore } from '@/store/appStore';
 import Button from '@/components/UI/Button';
+import { useDevFlowMount } from '@/utils/devFlowLog';
 import { Document, DocumentSource } from '@/types';
 
 export default function AddDocumentScreen() {
+  useDevFlowMount('AddDocumentScreen')
+
   const router = useRouter();
   const { properties, tenants, addDocument } = useAppStore();
   

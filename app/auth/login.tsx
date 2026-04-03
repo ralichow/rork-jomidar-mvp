@@ -2,8 +2,11 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { authService } from '@/supabase/authentication'
+import { devFlowLog, useDevFlowMount } from '@/utils/devFlowLog'
 
 export default function LoginScreen() {
+  useDevFlowMount('LoginScreen')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
@@ -19,6 +22,7 @@ export default function LoginScreen() {
     }
 
     setLoading(true)
+    devFlowLog('LoginScreen', `UI Trigger -> ${isSignUp ? 'signUp' : 'signIn'} (email=${email})`)
     
     try {
       if (isSignUp) {
@@ -31,20 +35,25 @@ export default function LoginScreen() {
         
         if (error) {
           Alert.alert('Sign Up Error', error)
+          devFlowLog('LoginScreen', 'State Updated -> SignUp failed (alert shown)')
         } else {
           Alert.alert('Success', 'Account created successfully! Please check your email to verify your account.')
+          devFlowLog('LoginScreen', 'State Updated -> SignUp success (alert shown)')
         }
       } else {
         const { data, error } = await authService.signIn(email, password)
         
         if (error) {
           Alert.alert('Sign In Error', error)
+          devFlowLog('LoginScreen', 'State Updated -> SignIn failed (alert shown)')
         } else {
           router.replace('/(tabs)')
+          devFlowLog('LoginScreen', 'State Updated -> Navigated to /(tabs)')
         }
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred')
+      devFlowLog('LoginScreen', 'State Updated -> Unexpected error (alert shown)')
     } finally {
       setLoading(false)
     }
@@ -52,20 +61,28 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
+    devFlowLog('LoginScreen', 'UI Trigger -> signInWithGoogle')
     const { error } = await authService.signInWithGoogle()
     
     if (error) {
       Alert.alert('Google Sign In Error', error)
+      devFlowLog('LoginScreen', 'State Updated -> Google sign-in failed (alert shown)')
+    } else {
+      devFlowLog('LoginScreen', 'State Updated -> Google sign-in initiated')
     }
     setLoading(false)
   }
 
   const handleFacebookSignIn = async () => {
     setLoading(true)
+    devFlowLog('LoginScreen', 'UI Trigger -> signInWithFacebook')
     const { error } = await authService.signInWithFacebook()
     
     if (error) {
       Alert.alert('Facebook Sign In Error', error)
+      devFlowLog('LoginScreen', 'State Updated -> Facebook sign-in failed (alert shown)')
+    } else {
+      devFlowLog('LoginScreen', 'State Updated -> Facebook sign-in initiated')
     }
     setLoading(false)
   }

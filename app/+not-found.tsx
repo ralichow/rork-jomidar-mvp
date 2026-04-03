@@ -1,7 +1,10 @@
 import { Link, Stack } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { useDevFlowMount } from '@/utils/devFlowLog';
 
 export default function NotFoundScreen() {
+  useDevFlowMount('NotFoundScreen')
+
   return (
     <>
       <Stack.Screen options={{ title: "Oops!" }} />
