@@ -1,12 +1,26 @@
 
 import { supabase } from './config'
 import { getRowCount, supabaseErrTrace, supabaseReqTrace, supabaseResTrace } from './devLogs'
+import * as WebBrowser from 'expo-web-browser'
+import * as Linking from 'expo-linking'
 
 export interface AuthUser {
   id: string
   email: string
   full_name?: string
   user_type: 'landlord' | 'tenant'
+}
+
+function extractTokensFromUrl(url: string): { access_token?: string; refresh_token?: string } {
+  // Supabase appends tokens as hash fragment: #access_token=...&refresh_token=...
+  const hashIndex = url.indexOf('#')
+  if (hashIndex === -1) return {}
+  const fragment = url.substring(hashIndex + 1)
+  const params = new URLSearchParams(fragment)
+  return {
+    access_token: params.get('access_token') ?? undefined,
+    refresh_token: params.get('refresh_token') ?? undefined,
+  }
 }
 
 export const authService = {
@@ -77,10 +91,13 @@ export const authService = {
     supabaseReqTrace('auth', 'signInWithOAuth', { provider: 'google' })
 
     try {
+      const redirectTo = Linking.createURL('auth/callback')
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'your-app://auth/callback',
+          redirectTo,
+          skipBrowserRedirect: true,
         },
       })
 
@@ -89,33 +106,34 @@ export const authService = {
         return { data: null, error: error.message }
       }
 
-      supabaseResTrace('auth', 'signInWithOAuth', { url: data?.url, provider: 'google' })
-      return { data, error: null }
-    } catch (error: any) {
-      supabaseErrTrace('auth', 'signInWithOAuth', error)
-      return { data: null, error: error?.message ?? String(error) }
-    }
-  },
-
-  // Sign in with Facebook
-  async signInWithFacebook() {
-    supabaseReqTrace('auth', 'signInWithOAuth', { provider: 'facebook' })
-
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: {
-          redirectTo: 'your-app://auth/callback',
-        },
-      })
-
-      if (error) {
-        supabaseErrTrace('auth', 'signInWithOAuth', error)
-        return { data: null, error: error.message }
+      if (!data?.url) {
+        return { data: null, error: 'No OAuth URL returned' }
       }
 
-      supabaseResTrace('auth', 'signInWithOAuth', { url: data?.url, provider: 'facebook' })
-      return { data, error: null }
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
+
+      if (result.type !== 'success') {
+        return { data: null, error: result.type === 'cancel' ? 'Sign in cancelled' : 'Sign in failed' }
+      }
+
+      const { access_token, refresh_token } = extractTokensFromUrl(result.url)
+
+      if (!access_token || !refresh_token) {
+        return { data: null, error: 'No tokens received from Google sign in' }
+      }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      })
+
+      if (sessionError) {
+        supabaseErrTrace('auth', 'setSession', sessionError)
+        return { data: null, error: sessionError.message }
+      }
+
+      supabaseResTrace('auth', 'signInWithOAuth', { provider: 'google', userId: sessionData.user?.id })
+      return { data: sessionData, error: null }
     } catch (error: any) {
       supabaseErrTrace('auth', 'signInWithOAuth', error)
       return { data: null, error: error?.message ?? String(error) }

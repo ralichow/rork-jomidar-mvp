@@ -23,16 +23,16 @@ export default function LoginScreen() {
 
     setLoading(true)
     devFlowLog('LoginScreen', `UI Trigger -> ${isSignUp ? 'signUp' : 'signIn'} (email=${email})`)
-    
+
     try {
       if (isSignUp) {
         if (!fullName) {
           Alert.alert('Error', 'Please enter your full name')
           return
         }
-        
+
         const { data, error } = await authService.signUp(email, password, fullName, userType)
-        
+
         if (error) {
           Alert.alert('Sign Up Error', error)
           devFlowLog('LoginScreen', 'State Updated -> SignUp failed (alert shown)')
@@ -42,7 +42,7 @@ export default function LoginScreen() {
         }
       } else {
         const { data, error } = await authService.signIn(email, password)
-        
+
         if (error) {
           Alert.alert('Sign In Error', error)
           devFlowLog('LoginScreen', 'State Updated -> SignIn failed (alert shown)')
@@ -62,35 +62,29 @@ export default function LoginScreen() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     devFlowLog('LoginScreen', 'UI Trigger -> signInWithGoogle')
-    const { error } = await authService.signInWithGoogle()
-    
-    if (error) {
-      Alert.alert('Google Sign In Error', error)
-      devFlowLog('LoginScreen', 'State Updated -> Google sign-in failed (alert shown)')
-    } else {
-      devFlowLog('LoginScreen', 'State Updated -> Google sign-in initiated')
-    }
-    setLoading(false)
-  }
+    try {
+      const { data, error } = await authService.signInWithGoogle()
 
-  const handleFacebookSignIn = async () => {
-    setLoading(true)
-    devFlowLog('LoginScreen', 'UI Trigger -> signInWithFacebook')
-    const { error } = await authService.signInWithFacebook()
-    
-    if (error) {
-      Alert.alert('Facebook Sign In Error', error)
-      devFlowLog('LoginScreen', 'State Updated -> Facebook sign-in failed (alert shown)')
-    } else {
-      devFlowLog('LoginScreen', 'State Updated -> Facebook sign-in initiated')
+      if (error) {
+        if (error !== 'Sign in cancelled') {
+          Alert.alert('Google Sign In Error', error)
+        }
+        devFlowLog('LoginScreen', `State Updated -> Google sign-in failed: ${error}`)
+      } else {
+        devFlowLog('LoginScreen', 'State Updated -> Google sign-in success')
+        router.replace('/(tabs)')
+      }
+    } catch (e) {
+      Alert.alert('Error', 'An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        {isSignUp ? 'Create Account' : 'Welcome Back'}
+        {isSignUp ? 'Create Account' : 'Log In'}
       </Text>
 
       {isSignUp && (
@@ -102,7 +96,7 @@ export default function LoginScreen() {
             onChangeText={setFullName}
             autoCapitalize="words"
           />
-          
+
           <View style={styles.userTypeContainer}>
             <TouchableOpacity
               style={[styles.userTypeButton, userType === 'landlord' && styles.userTypeActive]}
@@ -151,25 +145,21 @@ export default function LoginScreen() {
         </Text>
       </TouchableOpacity>
 
-      <View style={styles.divider}>
-        <Text style={styles.dividerText}>OR</Text>
-      </View>
+      {!isSignUp && (
+        <View style={styles.divider}>
+          <Text style={styles.dividerText}>OR</Text>
+        </View>
+      )}
 
-      <TouchableOpacity
-        style={[styles.button, styles.googleButton]}
-        onPress={handleGoogleSignIn}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>Continue with Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, styles.facebookButton]}
-        onPress={handleFacebookSignIn}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>Continue with Facebook</Text>
-      </TouchableOpacity>
+      {!isSignUp && (
+        <TouchableOpacity
+          style={[styles.button, styles.googleButton]}
+          onPress={handleGoogleSignIn}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>Continue with Google</Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity
         style={styles.switchButton}
@@ -246,9 +236,6 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     backgroundColor: '#db4437',
-  },
-  facebookButton: {
-    backgroundColor: '#3b5998',
   },
   buttonText: {
     color: '#fff',
