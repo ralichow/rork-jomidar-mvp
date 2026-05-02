@@ -152,6 +152,26 @@ export const en = {
   about: 'About',
   version: 'Version',
   
+  // Phone Auth
+  continue_with_phone: 'Continue with Phone',
+  use_email_instead: 'Use Email instead',
+  enter_phone_number: 'Enter your phone number',
+  phone_hint: 'Bangladesh number without +880 (e.g. 01XXXXXXXXX)',
+  send_otp: 'Send OTP',
+  sending_otp: 'Sending OTP...',
+  verify_otp: 'Verify OTP',
+  verifying: 'Verifying...',
+  enter_otp: 'Enter 6-digit OTP',
+  otp_sent: 'OTP sent to your phone number',
+  otp_sent_to: 'OTP sent to',
+  resend_otp: 'Resend OTP',
+  resend_otp_in: 'Resend OTP in',
+  seconds: 's',
+  invalid_phone_number: 'Please enter a valid Bangladesh phone number (e.g. 01XXXXXXXXX)',
+  wrong_otp: 'Invalid OTP. Please check and try again.',
+  otp_expired: 'OTP has expired. Please request a new one.',
+  back: 'Back',
+
   // Misc
   go_back: 'Go Back',
   try_different_search: 'Try a different search term',

@@ -160,8 +160,8 @@ export const useAuthStore = create<AuthState>()(
 
         const mappedUser: User = {
           id: supabaseUser.id,
-          name: nameFromMetadata || currentUser?.name || supabaseUser.email || 'User',
-          mobile: currentUser?.mobile || '',
+          name: nameFromMetadata || currentUser?.name || supabaseUser.email || (supabaseUser as any).phone || 'User',
+          mobile: (supabaseUser as any).phone || currentUser?.mobile || '',
           email: supabaseUser.email ?? currentUser?.email,
           createdAt: currentUser?.createdAt || new Date().toISOString(),
         };

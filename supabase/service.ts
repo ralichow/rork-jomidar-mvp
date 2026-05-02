@@ -330,3 +330,37 @@ export const databaseService = {
     }
   },
 }
+
+// ---------------------------------------------------------------------------
+// Edge Functions
+// ---------------------------------------------------------------------------
+
+export type HelloJomidarResponse = {
+  message: string
+  timestamp: string
+  authenticated: boolean
+}
+
+export const edgeFunctionService = {
+  /**
+   * Calls the `hello-jomidar` dummy edge function.
+   * Requires an active Supabase session (JWT is forwarded automatically).
+   *
+   * @param name  Optional name to include in the greeting.
+   */
+  async helloJomidar(name?: string): Promise<{ data: HelloJomidarResponse | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase.functions.invoke<HelloJomidarResponse>('hello-jomidar', {
+        body: name ? { name } : {},
+      })
+
+      if (error) {
+        return { data: null, error }
+      }
+
+      return { data, error: null }
+    } catch (error: any) {
+      return { data: null, error }
+    }
+  },
+}

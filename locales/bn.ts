@@ -152,6 +152,26 @@ export const bn = {
   about: 'সম্পর্কে',
   version: 'ভার্সন',
   
+  // Phone Auth
+  continue_with_phone: 'ফোন দিয়ে চালিয়ে যান',
+  use_email_instead: 'ইমেইল ব্যবহার করুন',
+  enter_phone_number: 'আপনার ফোন নম্বর দিন',
+  phone_hint: '+880 ছাড়া বাংলাদেশি নম্বর (যেমন 01XXXXXXXXX)',
+  send_otp: 'ওটিপি পাঠান',
+  sending_otp: 'ওটিপি পাঠানো হচ্ছে...',
+  verify_otp: 'ওটিপি যাচাই করুন',
+  verifying: 'যাচাই হচ্ছে...',
+  enter_otp: '৬ সংখ্যার ওটিপি দিন',
+  otp_sent: 'আপনার ফোন নম্বরে ওটিপি পাঠানো হয়েছে',
+  otp_sent_to: 'ওটিপি পাঠানো হয়েছে',
+  resend_otp: 'ওটিপি পুনরায় পাঠান',
+  resend_otp_in: 'ওটিপি পুনরায় পাঠান',
+  seconds: 'সে.',
+  invalid_phone_number: 'একটি বৈধ বাংলাদেশি ফোন নম্বর দিন (যেমন 01XXXXXXXXX)',
+  wrong_otp: 'ভুল ওটিপি। অনুগ্রহ করে আবার চেষ্টা করুন।',
+  otp_expired: 'ওটিপির মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে নতুন ওটিপি নিন।',
+  back: 'পিছনে',
+
   // Misc
   go_back: 'ফিরে যান',
   try_different_search: 'অন্য সার্চ টার্ম ব্যবহার করুন',

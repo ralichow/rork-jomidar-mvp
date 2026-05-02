@@ -206,4 +206,63 @@ export const authService = {
       return null
     }
   },
+
+  // Send OTP to phone number
+  async signInWithPhone(phone: string) {
+    supabaseReqTrace('auth', 'signInWithOtp', { phone })
+
+    try {
+      // Validate E.164 format
+      const e164Regex = /^\+[1-9]\d{7,14}$/
+      if (!e164Regex.test(phone)) {
+        return { data: null, error: 'Please enter a valid phone number in international format (e.g. +8801XXXXXXXXX)' }
+      }
+
+      const { data, error } = await supabase.auth.signInWithOtp({ phone })
+
+      if (error) {
+        supabaseErrTrace('auth', 'signInWithOtp', error)
+        return { data: null, error: error.message }
+      }
+
+      supabaseResTrace('auth', 'signInWithOtp', { phone, messageId: data?.messageId })
+      return { data, error: null }
+    } catch (error: any) {
+      supabaseErrTrace('auth', 'signInWithOtp', error)
+      return { data: null, error: error?.message ?? String(error) }
+    }
+  },
+
+  // Verify phone OTP
+  async verifyPhoneOtp(phone: string, token: string) {
+    supabaseReqTrace('auth', 'verifyOtp', { phone, tokenLength: token.length })
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms',
+      })
+
+      if (error) {
+        supabaseErrTrace('auth', 'verifyOtp', error)
+
+        // Map common Supabase error messages to user-friendly ones
+        const msg = error.message.toLowerCase()
+        if (msg.includes('expired') || msg.includes('otp has expired')) {
+          return { data: null, error: 'OTP has expired. Please request a new one.' }
+        }
+        if (msg.includes('invalid') || msg.includes('token')) {
+          return { data: null, error: 'Invalid OTP. Please check and try again.' }
+        }
+        return { data: null, error: error.message }
+      }
+
+      supabaseResTrace('auth', 'verifyOtp', { userId: data.user?.id, phone: data.user?.phone })
+      return { data, error: null }
+    } catch (error: any) {
+      supabaseErrTrace('auth', 'verifyOtp', error)
+      return { data: null, error: error?.message ?? String(error) }
+    }
+  },
 }

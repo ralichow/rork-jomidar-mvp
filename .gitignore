@@ -42,3 +42,6 @@ yarn-error.*
 
 # Cursor IDEA
 .cursor/**
+
+# vscode
+.vscode/
